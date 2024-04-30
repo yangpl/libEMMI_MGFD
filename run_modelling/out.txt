@@ -1,0 +1,140 @@
+
+  TensorMesh: 4,040,000 cells
+
+                      MESH EXTENT             CELL WIDTH      FACTOR
+  dir    nC        min           max         min       max      max
+  ---   ---  ---------------------------  ------------------  ------
+   x    200    -10,000.00     10,000.00    100.00    100.00    1.00
+   y    200    -10,000.00     10,000.00    100.00    100.00    1.00
+   z    101     -4,000.00         40.00     40.00     40.00    1.00
+
+
+
+  TensorMesh: 10,485,760 cells
+
+                      MESH EXTENT             CELL WIDTH      FACTOR
+  dir    nC        min           max         min       max      max
+  ---   ---  ---------------------------  ------------------  ------
+   x    256    -25,038.09     25,038.09    100.00  1,479.64    1.10
+   y    256    -25,038.09     25,038.09    100.00  1,479.64    1.10
+   z    160    -19,255.18    101,884.51     40.00 16,075.09    1.19
+
+
+
+:: emg3d START :: 21:12:54 :: v1.8.2
+
+   MG-cycle       : 'F'                 sslsolver : False
+   semicoarsening : True [1 2 3]        tol       : 1e-06
+   linerelaxation : True [4 5 6]        maxit     : 50
+   nu_{i,1,c,2}   : 0, 2, 1, 2          verb      : 4
+   Original grid  : 256 x 256 x 160     => 10,485,760 cells
+   Coarsest grid  :   2 x   2 x   5     => 20 cells
+   Coarsest level :   7 ;   7 ;   5   
+
+   [hh:mm:ss]  rel. error                  [abs. error, last/prev]   l s
+
+       h_
+      2h_ \                                                      /
+      4h_  \                                        /\          / 
+      8h_   \                            /\        /  \        /  
+     16h_    \                  /\      /  \      /    \      /   
+     32h_     \          /\    /  \    /    \    /      \    /    
+     64h_      \    /\  /  \  /    \  /      \  /        \  /     
+    128h_       \/\/  \/    \/      \/        \/          \/      
+
+   [21:14:11]   3.105e-03  after   1 F-cycles   [3.427e-09, 0.003]   4 1
+   [21:15:26]   2.747e-04  after   2 F-cycles   [3.031e-10, 0.088]   5 2
+   [21:16:35]   3.246e-04  after   3 F-cycles   [3.582e-10, 1.182]   6 3
+   [21:17:55]   6.028e-05  after   4 F-cycles   [6.651e-11, 0.186]   4 1
+   [21:19:11]   3.383e-05  after   5 F-cycles   [3.733e-11, 0.561]   5 2
+   [21:20:19]   7.283e-05  after   6 F-cycles   [8.037e-11, 2.153]   6 3
+   [21:21:37]   1.013e-05  after   7 F-cycles   [1.117e-11, 0.139]   4 1
+   [21:22:53]   6.186e-06  after   8 F-cycles   [6.826e-12, 0.611]   5 2
+   [21:24:02]   2.033e-05  after   9 F-cycles   [2.243e-11, 3.286]   6 3
+   [21:25:22]   2.243e-06  after  10 F-cycles   [2.475e-12, 0.110]   4 1
+   [21:26:37]   1.338e-06  after  11 F-cycles   [1.477e-12, 0.597]   5 2
+   [21:27:46]   5.287e-06  after  12 F-cycles   [5.834e-12, 3.951]   6 3
+   [21:29:05]   5.450e-07  after  13 F-cycles   [6.014e-13, 0.103]   4 1
+
+   > CONVERGED
+   > MG cycles        : 13
+   > Final rel. error : 5.450e-07
+
+:: emg3d END   :: 21:29:05 :: runtime = 0:16:11
+
+pyang@pyang-ThinkBook-14-G4-IAP:~/Documents/libEMMI_MGFD/run_modelling$ bash run.sh 
+  Current date and time: 29-Apr-2024 21:49:32
+=====================================================
+    Welcome to EM modeling and inversion code        
+    -------------lib_EMMI_MGFD---------------        
+            Author: Pengliang Yang                   
+            E-mail: ypl.2100@gmail.com               
+    Copyright (c) 2023. All rights reserved.         
+=====================================================
+Task: Electromagnetic forward modeling 
+=====================================================
+freq[0]=0.25 
+Active source channels: Ex
+Active recever channels: Ex Ey Hx Hy
+[nx, ny, nz]=[200, 200, 100]
+[dx, dy, dz]=[100, 100, 40]
+[ox, oy, oz]=[-10000, -10000, 0]
+istrech=0 
+addair=1, nb_air=15, rho_air=1e+08 Ohm*m 
+GMG grid size: [n1pad, n2pad, n3pad]=[257, 257, 161]
+****** isrc=1 nrec=101, [x,y,z,azimuth,dip]=[0, 0, 950, 0, 0]
+lensrc=275, nsubsrc=1
+lenrec=8, nsubrec=1
+original domain [x1min, x1max]=[-10000, 10000]
+original domain [x2min, x2max]=[-10000, 10000]
+original domain [x3min, x3max]=[0, 4000]
+nsrc_total=1
+nrec_total=101
+---------------- emf init, freq=0.25 Hz ----------------
+logcond=0 (1=average over log(cond), 0=not)
+parameters to extend domain: [rhox, rhoy, rhoz]=[5, 5, 10]
+extended boundary: [lx, ly, lz, lair]=[13504.7, 13504.7, 19098.6, 100000]
+unextended model [rhomin, rhomax]=[0.3, 100]
+extended model   [rhomin, rhomax]=[0.3, 1e+08]
+------------------ GMG init -------------------
+cycleopt=2 (1=V cycle; 2=F cycle; 3=W cycle)
+number of V/F/W cycles, ncycle=30
+number of pre-smoothing, v1=0
+number of post-smoothing, v2=2
+number of grid levels, [lmax1,lmax2,lmax3]=[8,8,6]
+isemicoarsen=1 (1=semi-coarsening, 0=full coarsening)
+----------------------------------------------
+icycle=0 rnorm=1.103455e-06
+icycle=1 rnorm=8.232235e-08
+icycle=2 rnorm=5.369951e-09
+icycle=3 rnorm=2.482191e-09
+icycle=4 rnorm=4.773124e-10
+icycle=5 rnorm=2.871641e-10
+icycle=6 rnorm=6.206484e-10
+icycle=7 rnorm=1.288605e-10
+icycle=8 rnorm=1.024887e-10
+icycle=9 rnorm=3.066137e-10
+icycle=10 rnorm=5.423823e-11
+icycle=11 rnorm=4.430393e-11
+icycle=12 rnorm=1.673841e-10
+icycle=13 rnorm=2.589486e-11
+icycle=14 rnorm=2.080011e-11
+icycle=15 rnorm=9.445591e-11
+icycle=16 rnorm=1.327004e-11
+icycle=17 rnorm=1.023644e-11
+icycle=18 rnorm=5.312064e-11
+icycle=19 rnorm=7.112463e-12
+icycle=20 rnorm=5.198301e-12
+icycle=21 rnorm=2.928775e-11
+icycle=22 rnorm=3.881200e-12
+icycle=23 rnorm=2.683110e-12
+icycle=24 rnorm=1.575686e-11
+icycle=25 rnorm=2.115805e-12
+icycle=26 rnorm=1.392301e-12
+icycle=27 rnorm=8.290055e-12
+icycle=28 rnorm=1.141820e-12
+icycle=29 rnorm=7.219802e-13
+
+real	14m40.524s
+user	14m32.174s
+sys	0m6.461s

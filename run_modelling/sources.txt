@@ -1,0 +1,2 @@
+ x y z azimuth dip isrc
+           0           0   950.000000               0           0           1

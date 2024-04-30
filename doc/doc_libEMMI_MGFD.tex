@@ -1,0 +1,354 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{algorithmicx}
+\usepackage{graphicx}
+
+%opening
+\title{Notes for libEMMI\_MGFD}
+\author{Pengliang Yang\\
+Harbin Institute of Technology, China\\
+E-mail: ypl.2100@gmail.com}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Input parameters}
+\verb|run.sh|
+\begin{verbatim}
+#!/bin/bash
+
+export OMP_NUM_THREADS=2
+mpirun -n 25 ../bin/main mode=1 \
+       istretch=0 \
+       addair=1 \
+       freqs=0.25,1,2.75 \
+       chsrc=Ex \
+       chrec=Ex ,Ey,Hx,Hy \
+       nx=100 \
+       ny=100 \
+       nz=100 \
+       dx=200 \
+       dy=200 \
+       dz=40 \
+       ox=-10000 \
+       oy=-10000 \
+       oz=0 \
+       fbathy=fbathy \
+       frho11=frho_init \
+       frho22=frho_init \
+       frho33=frho_init \
+       fsrc=sources.txt \
+       frec=receivers.txt \
+       fsrcrec=src_rec_table.txt \
+       niter=30 \
+       npar=2 \
+       bound=1 \
+       idxpar=1,2 \
+       minpar=1.0,1.0 \
+       maxpar=100.0,100.0 \
+       gamma1=100 \
+       gamma2=0
+\end{verbatim}
+
+\section{Source-receiver configuration}
+
+\verb|sources.txt|
+\begin{verbatim}
+     x             y            z         azimuth       dip   iTx
+-2196.15234   -8196.15234    903.652222   30.0000000     0      1
+ 401.923828   -6696.15234    870.258484   30.0000000     0      2
+ 3000.00000   -5196.15234    834.029785   30.0000000     0      3
+ 5598.07617   -3696.15234    810.434204   30.0000000     0      4
+ 8196.15234   -2196.15234    809.226013   30.0000000     0      5
+-3696.15234   -5598.07617    865.961426   30.0000000     0      6
+-1098.07617   -4098.07617    832.172302   30.0000000     0      7
+ 1500.00000   -2598.07617    807.180298   30.0000000     0      8
+ 4098.07617   -1098.07617    802.881104   30.0000000     0      9
+ 6696.15234    401.923828    821.753967   30.0000000     0     10
+ ......
+\end{verbatim}
+
+\verb|receivers.txt|
+\begin{verbatim}
+     x             y              z       azimuth  dip  iRx
+-10000.0000     0.00000000     1000.00000     0     0     1
+-9800.00000     0.00000000     1000.00000     0     0     2
+-9600.00000     0.00000000     1000.00000     0     0     3
+-9400.00000     0.00000000     1000.00000     0     0     4
+-9200.00000     0.00000000     1000.00000     0     0     5
+-9000.00000     0.00000000     1000.00000     0     0     6
+-8800.00000     0.00000000     1000.00000     0     0     7
+-8600.00000     0.00000000     1000.00000     0     0     8
+-8400.00000     0.00000000     1000.00000     0     0     9
+-8200.00000     0.00000000     1000.00000     0     0    10
+-8000.00000     0.00000000     1000.00000     0     0    11
+-7800.00000     0.00000000     1000.00000     0     0    12
+-7600.00000     0.00000000     1000.00000     0     0    13
+-7400.00000     0.00000000     1000.00000     0     0    14
+-7200.00000     0.00000000     1000.00000     0     0    15
+-7000.00000     0.00000000     1000.00000     0     0    16
+......
+\end{verbatim}
+
+\verb|src_rec_table.txt|
+\begin{verbatim}
+ isrc        irec
+   1           1
+   1           2
+   1           3
+   1           4
+   1           5
+   1           6
+   1           7
+   1           8
+   1           9
+   1          10
+   ...
+   2           1
+   2           2
+   2           3
+   2           4
+   2           5
+   2           6
+   2           7
+   2           8
+   2           9
+   2          10
+   ...
+\end{verbatim}
+
+
+\section{Output EMF files}
+\verb|emf_XXXX.txt|
+\begin{verbatim}
+iTx  iRx   chrec frequency/Hz    Real{E/H}     Imag{E/H}
+1     1      Ex     0.25       -8.794095e-15 2.336085e-14
+1     2      Ex     0.25       -8.236141e-15 2.632050e-14
+1     3      Ex     0.25       -7.451898e-15 2.954083e-14
+1     4      Ex     0.25       -6.390576e-15 3.306965e-14
+1     5      Ex     0.25       -4.998464e-15 3.694922e-14
+1     6      Ex     0.25       -3.228805e-15 4.118009e-14
+1     7      Ex     0.25       -1.026235e-15 4.577336e-14
+1     8      Ex     0.25       1.681961e-15 5.075206e-14
+1     9      Ex     0.25       4.974577e-15 5.613805e-14
+1     10     Ex     0.25       8.933074e-15 6.194364e-14
+......
+1     1      Ex      1   	 -1.045790e-12 	 9.924710e-13
+1     2      Ex      1   	 -1.119678e-12 	 1.968149e-12
+1     3      Ex      1   	 -8.904390e-13 	 3.433207e-12
+1     4      Ex      1   	 -1.103422e-13 	 6.096019e-12
+1     5      Ex      1   	 1.431065e-12 	 1.066018e-11
+1     6      Ex      1   	 6.458673e-12 	 2.313294e-11
+1     7      Ex      1   	 2.208377e-11 	 5.329251e-11
+1     8      Ex      1   	 1.162063e-10 	 1.498437e-10
+1     9      Ex      1   	 3.530520e-10 	 3.849713e-10
+1     10     Ex      1   	 -1.178124e-09 	 6.435691e-10
+......
+\end{verbatim}
+
+
+\section{Convergence information on CSEM inversion}
+
+\verb|iterate.txt|
+\begin{verbatim}
+ ==========================================================
+l-BFGS memory length: 5
+Maximum number of iterations: 30
+Convergence tolerance: 1.00e-06
+maximum number of line search: 5
+initial step length: alpha=1
+==========================================================
+iter    fk       fk/f0      ||gk||    alpha    nls   ngrad
+  0   1.08e+03  1.00e+00   5.30e+00  1.00e+00    0     0
+  1   9.16e+02  8.49e-01   4.50e+00  4.00e+00    2     3
+  2   6.48e+02  6.01e-01   5.15e+00  2.50e-01    2     6
+  3   5.96e+02  5.52e-01   8.72e+00  1.00e+00    0     7
+  4   4.35e+02  4.03e-01   4.40e+00  1.00e+00    0     8
+  5   3.35e+02  3.11e-01   3.20e+00  1.00e+00    0     9
+  6   2.58e+02  2.39e-01   5.29e+00  5.00e-01    1    11
+  7   2.09e+02  1.94e-01   3.69e+00  1.00e+00    0    12
+  8   1.71e+02  1.58e-01   2.00e+00  1.00e+00    0    13
+  9   1.44e+02  1.34e-01   1.53e+00  1.00e+00    0    14
+ 10   1.23e+02  1.14e-01   2.09e+00  1.00e+00    0    15
+ 11   1.16e+02  1.07e-01   2.28e+00  1.00e+00    0    16
+ 12   8.96e+01  8.31e-02   2.02e+00  1.00e+00    0    17
+ 13   7.71e+01  7.15e-02   1.77e+00  1.00e+00    0    18
+ 14   6.27e+01  5.82e-02   8.97e-01  1.00e+00    0    19
+ 15   5.48e+01  5.08e-02   1.11e+00  1.00e+00    0    20
+ 16   4.93e+01  4.57e-02   7.89e-01  1.00e+00    0    21
+ 17   4.45e+01  4.13e-02   6.47e-01  1.00e+00    0    22
+ 18   4.06e+01  3.76e-02   7.92e-01  1.00e+00    0    23
+ 19   3.69e+01  3.42e-02   6.41e-01  1.00e+00    0    24
+ 20   3.42e+01  3.17e-02   7.62e-01  1.00e+00    0    25
+ 21   3.30e+01  3.06e-02   9.15e-01  1.00e+00    0    26
+ 22   3.01e+01  2.79e-02   6.26e-01  1.00e+00    0    27
+ 23   2.80e+01  2.60e-02   6.31e-01  1.00e+00    0    28
+ 24   2.66e+01  2.47e-02   6.19e-01  1.00e+00    0    29
+ 25   2.60e+01  2.41e-02   7.20e-01  1.00e+00    0    30
+ 26   2.58e+01  2.40e-02   1.13e+00  1.00e+00    0    31
+ 27   2.50e+01  2.31e-02   8.96e-01  2.00e+00    1    38
+ 28   2.44e+01  2.26e-02   8.16e-01  1.00e+00    0    39
+ 29   2.35e+01  2.18e-02   4.30e-01  1.00e+00    0    40
+==>Maximum iteration number reached!
+\end{verbatim}
+
+
+\section{The Green's function and the reciprocity}\label{appendix:reciprocity}
+
+Assume only electrical current $J_j(x_s,\omega)=\delta(x-x_s)e_j$ where $e_j$ is the $j$-directed unit vector. We have
+\begin{equation}\label{eq:E|EH|E}
+  \begin{cases}
+    \nabla \times G_{ij}^{E|E} -\mathrm{i}\omega\mu  G_{ij}^{H|E} &= 0 \\
+    \nabla \times G_{ij}^{H|E} -\sigma  G_{ij}^{E|E}  &=\delta(x-x_s)e_j
+  \end{cases},
+\end{equation}
+which defines two Green's function $G_{ij}^{E|E}$ and $G_{ij}^{H|E}$: 
+$G_{ij}^{E|E}$ is the $i$th electrical ($E$) component of Green's function induced 
+by $j$th component of electrical ($E$) source; $G_{ij}^{H|E}$ is the $i$th 
+magnetic ($H$) component of Green's function induced by $j$th component of 
+electrical ($E$) source. The representation theorem gives
+\begin{equation}\label{eq:green1}
+  E_i =  G_{ij}^{E|E} J_j, H_i = G_{ij}^{H|E} J_j.
+\end{equation}
+
+
+
+We can do the same assuming only a magnetic source $M_j=\delta(x-x_s)e_j$: 
+$G_{ij}^{E|H}$ is the $i$th electrical ($E$)  component of Green's function 
+induced by $j$th component of magnetic ($H$) source; $G_{ij}^{H|H}$ is the 
+$i$th magnetic ($H$) component of Green's function induced by $j$th component of 
+magnetic ($H$) source.
+\begin{equation}\label{eq:HH|E|H}
+  \begin{cases}
+    \nabla \times G_{ij}^{E|H} -\mathrm{i}\omega\mu  G_{ij}^{H|H} &= \delta(x-x_s)e_j \\
+    \nabla \times G_{ij}^{H|H} -\sigma  G_{ij}^{E|H}  &=0
+  \end{cases},
+\end{equation}
+which defines another two Green's function $G_{ij}^{E|H}$ and $G_{ij}^{H|H}$. Similar to equation \eqref{eq:green1}, the representation theorem gives
+\begin{equation}
+  E_i =  G_{ij}^{E|H} M_j, H_i = G_{ij}^{H|H} M_j.
+\end{equation}
+The total electrical  and magnetic fields in the coupled system is then the 
+superposition of two contributions:
+\begin{equation}
+  E_i =\sum_j G_{ij}^{E|E} J_j + G_{ij}^{E|H} M_j, \quad 
+  H_i =\sum_j G_{ij}^{H|E} J_j + G_{ij}^{H|H} M_j.
+\end{equation}
+It is shown that the reciprocity for EM system holds in the following form
+\begin{equation}\label{eq:reciprocity}
+  \begin{cases}
+  G_{ij}^{E|E}(x_s|x_r) =  G_{ji}^{E|E}(x_r|x_s),\\
+  G_{ij}^{H|H}(x_s|x_r) =  G_{ji}^{H|H}(x_r|x_s),\\
+  G_{ij}^{H|E}(x_s|x_r) = - G_{ji}^{E|H}(x_r|x_s).
+  \end{cases}
+\end{equation}
+
+Without magnetic source, we have 
+\begin{equation}
+  \underbrace{\begin{bmatrix}
+    E_x\\
+    E_y\\
+    E_z
+  \end{bmatrix}}_E =\underbrace{\begin{bmatrix}
+      G_{xx}^{E|E} &G_{xy}^{E|E} & G_{xz}^{E|E} \\
+      G_{yx}^{E|E} &G_{yy}^{E|E} & G_{yz}^{E|E} \\
+      G_{zx}^{E|E} &G_{zy}^{E|E} & G_{zz}^{E|E} \\
+  \end{bmatrix}}_{G^{E|E}}\underbrace{\begin{bmatrix}
+    J_x\\
+    J_y\\
+    J_z
+  \end{bmatrix}}_{J_s} ,
+  \underbrace{\begin{bmatrix}
+    H_x\\
+    H_y\\
+    H_z
+  \end{bmatrix}}_H =\underbrace{\begin{bmatrix}
+      G_{xx}^{H|E} &G_{xy}^{H|E} & G_{xz}^{H|E} \\
+      G_{yx}^{H|E} &G_{yy}^{H|E} & G_{yz}^{H|E} \\
+      G_{zx}^{H|E} &G_{zy}^{H|E} & G_{zz}^{H|E} \\
+  \end{bmatrix}}_{G^{H|E}}\underbrace{\begin{bmatrix}
+    J_x\\
+    J_y\\
+    J_z
+  \end{bmatrix}}_{J_s}.
+\end{equation}
+If $J_s|_{x=x_s}=(1,0,0)^\mathrm{T}$, we have the 1st column of the matrix $G^{E|E}$ and $G^{H|E}$ extracted from vector fields $E$ and $H$
+\begin{subequations}
+  \begin{align}
+  \begin{bmatrix}
+    E_x(x_r)\\
+    E_y(x_r)\\
+    E_z(x_r)
+  \end{bmatrix} = &\begin{bmatrix}
+    G_{xx}^{E|E}(x_r|x_s)\\
+    G_{yx}^{E|E}(x_r|x_s)\\
+    G_{zx}^{E|E}(x_r|x_s)\\
+  \end{bmatrix}=\begin{bmatrix}
+  G_{xx}^{E|E}(x_s|x_r)\\
+  G_{xy}^{E|E}(x_s|x_r)\\
+  G_{xz}^{E|E}(x_s|x_r)\\
+  \end{bmatrix},\\
+  \begin{bmatrix}
+    H_x(x_r)\\
+    H_y(x_r)\\
+    H_z(x_r)
+  \end{bmatrix} = &\begin{bmatrix}
+    G_{xx}^{H|E}(x_r|x_s)\\
+    G_{yx}^{H|E}(x_r|x_s)\\
+    G_{zx}^{H|E}(x_r|x_s)\\
+  \end{bmatrix}=-\begin{bmatrix}
+  G_{xx}^{E|H}(x_s|x_r)\\
+  G_{xy}^{E|H}(x_s|x_r)\\
+  G_{xz}^{E|H}(x_s|x_r)\\
+  \end{bmatrix},
+  \end{align}
+\end{subequations}
+where the last equality comes from the reciprocity in \eqref{eq:reciprocity}. It implies that by switching the source and receiver position, we can reproduce the $E_x$, $E_y$ and $E_z$ response from the $E_x$-channel of the receiver at source position by repeating the modeling using the electrical sources at receiver location, i.e., $J_s|_{x=x_r}=(1,0,0)^\mathrm{T}$, $J_s|_{x=x_r}=(0,1,0)^\mathrm{T}$ and $J_s|_{x=x_r}=(0,0,1)^\mathrm{T}$. Similarly, we should reproduce  $-H_x$, $-H_y$ and $-H_z$ response from  the $E_x$-channel of the receiver at source position by repeating the modeling using the magnetic sources at receiver location, i.e., $M_s|_{x=x_r}=(1,0,0)^\mathrm{T}$, $M_s|_{x=x_r}=(0,1,0)^\mathrm{T}$ and $M_s|_{x=x_r}=(0,0,1)^\mathrm{T}$.
+
+
+If $J_s|_{x=x_s}=(0,1,0)^\mathrm{T}$, we have the 2nd column of the matrix $G^{E|E}$ and $G^{H|E}$ extracted from vector fields $E$ and $H$
+\begin{subequations}
+  \begin{align}
+  \begin{bmatrix}
+    E_x(x_r)\\
+    E_y(x_r)\\
+    E_z(x_r)
+  \end{bmatrix} = &\begin{bmatrix}
+    G_{xy}^{E|E}(x_r|x_s)\\
+    G_{yy}^{E|E}(x_r|x_s)\\
+    G_{zy}^{E|E}(x_r|x_s)\\
+  \end{bmatrix}=\begin{bmatrix}
+  G_{yx}^{E|E}(x_s|x_r)\\
+  G_{yy}^{E|E}(x_s|x_r)\\
+  G_{yz}^{E|E}(x_s|x_r)\\
+  \end{bmatrix},\\
+  \begin{bmatrix}
+    H_x(x_r)\\
+    H_y(x_r)\\
+    H_z(x_r)
+  \end{bmatrix} =& \begin{bmatrix}
+    G_{xy}^{H|E}(x_r|x_s)\\
+    G_{yy}^{H|E}(x_r|x_s)\\
+    G_{zy}^{H|E}(x_r|x_s)\\
+  \end{bmatrix}=-\begin{bmatrix}
+  G_{yx}^{E|H}(x_s|x_r)\\
+  G_{yy}^{E|H}(x_s|x_r)\\
+  G_{yz}^{E|H}(x_s|x_r)\\
+  \end{bmatrix}.
+  \end{align}
+\end{subequations}
+By switching the source and receiver position, we obtain the $E_x$, $E_y$ and $E_z$ response from the $E_y$-channel of the receiver at source position by repeating the modeling placing the sources at receiver location, i.e., $J_s|_{x=x_r}=(1,0,0)^\mathrm{T}$, $J_s|_{x=x_r}=(0,1,0)^\mathrm{T}$ and $J_s|_{x=x_r}=(0,0,1)^\mathrm{T}$. Also, we obtain  $-H_x$, $-H_y$ and $-H_z$ response from  the $E_y$-channel of the receiver at source position by repeating the modeling placing the magnetic sources at receiver location, i.e., $M_s|_{x=x_r}=(1,0,0)^\mathrm{T}$, $M_s|_{x=x_r}=(0,1,0)^\mathrm{T}$ and $M_s|_{x=x_r}=(0,0,1)^\mathrm{T}$.
+
+
+
+\end{document}
