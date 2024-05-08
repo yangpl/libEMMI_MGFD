@@ -9,6 +9,7 @@ as it has a parallel computing idea in mind since its design, to make it work
 for inversion simultaneously with multiple sources.
 
 #----------------------------------------------------
+
 Instructions to run:
 
 1. go into /src to compile the code using makefile:
@@ -26,7 +27,6 @@ Here I created a small Fortran code to generate acquisition files
 sources.txt, receivers.txt and a source-receiver connection table src_rec_table.txt.
 
 The input resistivity was created by another Fortran code as binaries.
-
 You should prepare your own!
 
 3. Test and compare with emg3d. I assume you have looked at the emg3d website and 

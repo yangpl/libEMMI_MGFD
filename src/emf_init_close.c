@@ -104,7 +104,7 @@ void emf_init(emf_t *emf)
   
   if(!getparint("addair", &emf->addair)) emf->addair = 1;//add air layers on top of sea surface
   if(!getparfloat("rho_air", &emf->rho_air)) emf->rho_air = 1e8;
-  if(!getparint("nb_air", &emf->nb_air)) emf->nb_air = 15;//nb layers on top of sea for air
+  if(!getparint("nb_air", &emf->nb_air)) emf->nb_air = 10;//nb layers on top of sea for air
   if(!getparint("istretch", &emf->istretch)) emf->istretch = 1;//1=grid stretching; 0=no grid stretching
   if(!emf->istretch){//uniform grid without grid stretching
     emf->n1 = emf->nx;
