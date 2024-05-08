@@ -33,10 +33,10 @@ print(mesh)
 rho = np.fromfile('frho', dtype=np.float32)
 rho = rho.reshape([nx, ny, nz], order='F')
 rho = rho[:,:,::-1] #reverse the order of z-axis
-mesh.plot_3d_slicer(rho,  xslice=-3500, yslice=1500, zslice=-1350,
+mesh.plot_3d_slicer(rho,  xslice=2500, yslice=0, zslice=-1500,
                 xlim=(x1[0], x1[nx-1]), ylim=(x2[0], x2[ny-1]), zlim=(x3[0], x3[nz-1]),
                 pcolor_opts={'norm': LogNorm(vmin=0.1,vmax=100), 'cmap':'jet'})
-mesh.plot_3d_slicer(rho,  xslice=2000, yslice=0, zslice=-2000,
+mesh.plot_3d_slicer(rho,  xslice=-3500, yslice=1500, zslice=-2400,
                 xlim=(x1[0], x1[nx-1]), ylim=(x2[0], x2[ny-1]), zlim=(x3[0], x3[nz-1]),
                 pcolor_opts={'norm': LogNorm(vmin=0.1,vmax=100), 'cmap':'jet'})
 
@@ -44,7 +44,7 @@ mesh.plot_3d_slicer(rho,  xslice=2000, yslice=0, zslice=-2000,
 rho = np.fromfile('frho_init', dtype=np.float32)
 rho = rho.reshape([nx, ny, nz], order='F')
 rho = rho[:,:,::-1] #reverse the order of z-axis
-mesh.plot_3d_slicer(rho,  xslice=0, yslice=0, zslice=-1500,
+mesh.plot_3d_slicer(rho,  xslice=2500, yslice=0, zslice=-1500,
                 xlim=(x1[0], x1[nx-1]), ylim=(x2[0], x2[ny-1]), zlim=(x3[0], x3[nz-1]),
                 pcolor_opts={'norm': LogNorm(vmin=0.1,vmax=100), 'cmap':'jet'})
 
@@ -52,11 +52,11 @@ mesh.plot_3d_slicer(rho,  xslice=0, yslice=0, zslice=-1500,
 lenx = nx*dx
 leny = ny*dy
 x, y = np.meshgrid(x1, x2)
-z = 900. + 100.*np.sin(2*np.pi*x/(3.*lenx))*np.sin(3.*np.pi*y/(2.*leny))
+z = 900. + 100.*np.sin(2*np.pi*x/(3.*lenx)+np.pi/3)*np.sin(3.*np.pi*y/(2.*leny)-np.pi/3)
 
 ax = plt.axes(projection ='3d')
-ax.plot_surface(x,y,z, cmap=cm.coolwarm)
-ax.set_zlim(600,1200)
+ax.plot_surface(x,y,-z, cmap=cm.coolwarm)
+ax.set_zlim(-1100,-700)
 ax.set_xlabel('X (m)')
 ax.set_ylabel('Y (m)')
 ax.set_zlabel('Z (m)')
