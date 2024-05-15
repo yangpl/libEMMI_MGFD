@@ -1,5 +1,4 @@
-# multigrid_CSEM_modelling
-3D CSEM modelling and inversion using multigrid frequency-domain solver
+# 3D CSEM modelling and inversion using multigrid frequency-domain solver
 
 Author: Pengliang Yang, ypl.2100@gmail.com
 Department of Mathematics, Harbin Institute of Technology, China
