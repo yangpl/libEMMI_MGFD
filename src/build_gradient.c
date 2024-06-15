@@ -40,7 +40,7 @@ void build_gradient(acq_t *acq, emf_t *emf, fwi_t *fwi,
 	  //mute gradient above bathymetry 
 	  if(emf->oz + (i3+0.5)*emf->dz<= emf->bathy[i2][i1]+emf->dz) fwi->grad[k][i3][i2][i1] = 0.;
 
-	  if(fwi->preco){
+	  if(fwi->preco==1){
 	    fwi->phess[k][i3][i2][i1] = 0.;
 	    for(ifreq=0; ifreq<emf->nfreq; ifreq++){
 	      if(fwi->idxpar[k]==1) {
