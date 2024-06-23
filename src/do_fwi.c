@@ -46,6 +46,7 @@ void do_fwi(acq_t *acqui, emf_t *emf)
   opt_t *opt; /* pointer for opt_t parameters */
   fwi_t *fwi;
   FILE *fp;
+  char fname[sizeof "Rv_iteration_00"];
 
   fwi = (fwi_t*)malloc(sizeof(fwi_t));
   opt = (opt_t*)malloc(sizeof(opt_t));
@@ -211,11 +212,13 @@ void do_fwi(acq_t *acqui, emf_t *emf)
 
       /* not break, then line search succeeds or descent direction accepted */
       if(opt->verb) {/* print out inverted physical parameter at each iteration */
-	fp=fopen("param_final_Rv", "wb");
+	sprintf(fname, "Rv_iteration_%02d", opt->iter);
+	fp=fopen(fname, "wb");
 	fwrite(&emf->rho33[0][0][0], emf->nx*emf->ny*emf->nz*sizeof(float), 1, fp);
 	fclose(fp);
 
-	fp=fopen("param_final_Rh", "wb");
+	sprintf(fname, "Rh_iteration_%02d", opt->iter);
+	fp=fopen(fname, "wb");
 	fwrite(&emf->rho11[0][0][0], emf->nx*emf->ny*emf->nz*sizeof(float), 1, fp);
 	fclose(fp);
       }
