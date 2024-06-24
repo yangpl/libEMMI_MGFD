@@ -23,7 +23,32 @@ E-mail: ypl.2100@gmail.com}
 
 
 \section{Input parameters}
-\verb|run.sh|
+\begin{itemize}
+\item \verb|mode|: \texttt{mode=0}, forward modelling; \texttt{mode=1}, 3D CSEM inversion;
+\item \verb|istretch|:  \texttt{istretch=1}, nonuniform grid stretching;  \texttt{istretch=0}, no grid stretching;
+\item \verb|addair|: \texttt{addair=1}, add air layers on top of input model; \texttt{addair=0}, extending the model using topmost value without adding air layers;
+\item \verb|freqs:| the frequencies used for CSEM modelling and inversion, a number of frequencies can be given by comma separated values;
+\item \verb|chsrc:| source channels (i.e. Ex, Ey, Ez, Hx, Hy, Hz)
+\item \verb|chrec:| receiver channels (i.e. Ex, Ey, Ez, Hx, Hy, Hz)
+\item \verb|nx,ny,nz|: number of intervals in x, y and z axes for input resistivity model on equispaced FD grid;
+\item \verb|dx,dy,dz|: grid spacing of input resistivity model on equispaced FD grid;
+\item \verb|ox,oy,oz|: origin of the 3D coordinates in x, y and z directions;
+\item \verb|fbathy|: a binary input file of size \texttt{nx*ny} to specify bathymetry information;
+\item \verb|frho11,frho22,frho33|: binary file of size \texttt{nx*ny*z} to specify resistivities;
+\item \verb|fsrc|: an ASCII file to specify source locations and orientations;
+\item \verb|frec|: an ASCII file to specify receiver locations and orientations;
+\item \verb|fsrcrec|: an ASCII file to specify the connection between source and receivers;
+\item \verb|niter|: number of iterations for nonlinear optimization;
+\item \verb|npar|: number of parameters used for inversion, default value=2;
+\item \verb|bound|: \texttt{bound=1} uses bounded LBFGS; \texttt{bound=0} does not apply bound constraint;
+\item \verb|idxpar|: index of the inversion parameter, default value=1,2 indicating horizontal and vertical resistivities;
+\item \verb|minpar|: the minimum values for the physical parameters;
+\item \verb|maxpar|: the maximum values for the physical parameters;
+\item \verb|gamma1|: strength of 1st order Tikhonov regularization;
+\item \verb|gamma2|: strength of Total Variational (TV) regularization;
+\end{itemize}
+An example job script \verb|run.sh| using the above parameters is listed in the following.
+
 \begin{verbatim}
 #!/bin/bash
 
@@ -61,8 +86,7 @@ mpirun -n 25 ../bin/main mode=1 \
 \end{verbatim}
 
 \section{Source-receiver configuration}
-
-\verb|sources.txt|
+The locations and orientations for every source/transmitter and receiver are written in a 6-column table. The following is an example of source table \texttt{sources.txt} where \texttt{x,y,z} are coordinates, \texttt{azimuth,dip} are orientations, \texttt{iTx} is the index of the transmitter.
 \begin{verbatim}
      x             y            z         azimuth       dip   iTx
 -2196.15234   -8196.15234    903.652222   30.0000000     0      1
@@ -78,7 +102,7 @@ mpirun -n 25 ../bin/main mode=1 \
  ......
 \end{verbatim}
 
-\verb|receivers.txt|
+The following is an example of receiver table \texttt{receivers.txt} where \texttt{x,y,z} are coordinates, \texttt{azimuth,dip} are orientations, \texttt{iRx} is the index of the receiver.
 \begin{verbatim}
      x             y              z       azimuth  dip  iRx
 -10000.0000     0.00000000     1000.00000     0     0     1
@@ -100,7 +124,8 @@ mpirun -n 25 ../bin/main mode=1 \
 ......
 \end{verbatim}
 
-\verb|src_rec_table.txt|
+The connections between sources and receivers (which receivers record data from which source) must be specified by a source-receiver connection table
+\verb|src_rec_table.txt| according to the index of the source and receivers.
 \begin{verbatim}
  isrc        irec
    1           1
@@ -129,7 +154,8 @@ mpirun -n 25 ../bin/main mode=1 \
 
 
 \section{Output EMF files}
-\verb|emf_XXXX.txt|
+
+The simulated CSEM data are stored in ASCII files. An example EM data file \verb|emf_0001.txt| from source index \texttt{0001} includes index of source and receivers (\texttt{iTx}, \texttt{iRx}), the recording channels of the receiver \texttt{chrec}, frequencies in Hz, real and imaginary part of the frequency domain data. They form a 6-column table in the following.
 \begin{verbatim}
 iTx  iRx   chrec frequency/Hz    Real{E/H}     Imag{E/H}
 1     1      Ex     0.25       -8.794095e-15 2.336085e-14
@@ -159,7 +185,7 @@ iTx  iRx   chrec frequency/Hz    Real{E/H}     Imag{E/H}
 
 \section{Convergence information on CSEM inversion}
 
-\verb|iterate.txt|
+After the 3D inversion, the convergence history of the nonlinear optimization will be stored in an ASCII file named \verb|iterate.txt|.
 \begin{verbatim}
  ==========================================================
 l-BFGS memory length: 5
@@ -201,7 +227,16 @@ iter    fk       fk/f0      ||gk||    alpha    nls   ngrad
  29   2.35e+01  2.18e-02   4.30e-01  1.00e+00    0    40
 ==>Maximum iteration number reached!
 \end{verbatim}
-
+In the above example, each columns has clear meaning:
+\begin{itemize}
+\item \texttt{iter}: the iteration index k;
+\item \texttt{fk}: the misfit at the k-th iteration;
+\item \texttt{fk/f0}: the normalized misfit at the k-th iteration;
+\item \texttt{||gk||}: the norm of the gradient;
+\item \texttt{alpha}: step length used in line search;
+\item \texttt{nls}: number of line search at the k-th iteration;
+\item \texttt{ngrad}: number of gradient evaluations
+\end{itemize}
 
 \section{The Green's function and the reciprocity}\label{appendix:reciprocity}
 
