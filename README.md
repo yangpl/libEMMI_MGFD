@@ -42,3 +42,15 @@ Modify run.sh to set "mode=0 frho11=frho frho22=frho frho33=frho" and run "bash 
 
 Then you can run inversion from a crude initial model frho_init.
 Modify run.sh to set "mode=1 frho11=frho_init frho22=frho_init frho33=frho_init" and run "bash run.sh".
+
+
+## Acknowledgements
+Pengliang Yang is indebted to Dieter Werthmüller for responsive feedback in last two years to develop the
+geometrical multigrid code using C programming language. Without his help and the Python code emg3d,
+it is not possible to complete libEMMI_MGFD to share with the community.
+
+## Bibliography
+
+1. Pengliang Yang and An Ping, libEMMI MGFD: A program of marine controlled-source electromagnetic
+modelling and inversion using frequency-domain multigrid solver, Computer Physics Communications 2024 
+[doi:10.1016/j.cpc.2024.109327](https://doi.org/10.1016/j.cpc.2024.109327)
