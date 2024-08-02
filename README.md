@@ -52,5 +52,5 @@ it is not possible to complete libEMMI_MGFD to share with the community.
 ## Bibliography
 
 1. Pengliang Yang and An Ping, libEMMI MGFD: A program of marine controlled-source electromagnetic
-modelling and inversion using frequency-domain multigrid solver, Computer Physics Communications 2024 
+modelling and inversion using frequency-domain multigrid solver, Computer Physics Communications 2024 305:109327
 [doi:10.1016/j.cpc.2024.109327](https://doi.org/10.1016/j.cpc.2024.109327)
