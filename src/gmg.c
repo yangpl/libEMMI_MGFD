@@ -1425,158 +1425,10 @@ void compute_H_from_E(gmg_t *gmg, int lev)
       }
     }
   }
-
-}
-
-/*< restrict r from lev to (lev+1)-th lev: fine to coarse grid >*/
-void restriction(gmg_t *gmg, int lev)
-{
-  int n1, n2, n3;
-  int i, j, k;
-  int ii, jj, kk;
-  int iim1, jjm1, kkm1;
-  int iip1, jjp1, kkp1;
-  complex ***fx, ***fy, ***fz;
-  complex ***rx, ***ry, ***rz;
-  double w1l, w2l, w3l;
-  double w1c, w2c, w3c;
-  double w1r, w2r, w3r;
-  complex s1, s2, s3;
   
-  n1 = gmg[lev+1].n1;
-  n2 = gmg[lev+1].n2;
-  n3 = gmg[lev+1].n3;
-  fx = gmg[lev+1].f[0];
-  fy = gmg[lev+1].f[1];
-  fz = gmg[lev+1].f[2];
-  rx = gmg[lev].r[0];
-  ry = gmg[lev].r[1];
-  rz = gmg[lev].r[2];
-
-  for(k=0; k<=n3; k++){
-    if(gmg[lev+1].sc[2]==2){
-      kk = 2*k;
-      kkm1 = MAX(kk-1, 0);
-      kkp1 = MIN(kk+1, 2*n3);
-      if(kk==0){
-	w3l = 0;//((gmg[lev].x3[0] - gmg[lev].d3s[0]/2) - (gmg[lev+1].x3[0] - gmg[lev+1].d3s[0]/2)) / (gmg[lev].d3s[0] / 2);
-	w3c = 1;
-	w3r = (gmg[lev+1].x3s[k] - gmg[lev].x3s[2*k])/gmg[lev].d3[2*k+1];
-      } else if(kk==gmg[lev].n3){
-	w3l = (gmg[lev].x3s[2*k-1] - gmg[lev+1].x3s[k-1])/gmg[lev].d3[2*k-1];
-	w3c = 1;
-	w3r = 0;//((gmg[lev+1].x3[k] + gmg[lev+1].d3s[k]/2 ) - (gmg[lev].x3[kk] + gmg[lev].d3s[kk] / 2 )) / (gmg[lev].d3s[kk] / 2);
-      } else {
-	w3l = (gmg[lev].x3s[2*k-1] - gmg[lev+1].x3s[k-1])/gmg[lev].d3[2*k-1];
-	w3c = 1;
-	w3r = (gmg[lev+1].x3s[k] - gmg[lev].x3s[2*k])/gmg[lev].d3[2*k+1];
-      }
-    }else{
-      kk = k;
-      kkm1 = k;
-      kkp1 = k;
-      w3l = 0;
-      w3c = 1;
-      w3r = 0;
-    }
-    for(j=0; j<=n2; j++){
-      if(gmg[lev+1].sc[1]==2){
-	jj = 2*j;
-	jjm1 = MAX(jj-1, 0);
-	jjp1 = MIN(jj+1, 2*n2);
-	if(jj==0){
-	  w2l = 0;//((gmg[lev].x2[0] - gmg[lev].d2s[0]/2) - (gmg[lev+1].x2[0] - gmg[lev+1].d2s[0]/2)) / (gmg[lev].d2s[0] / 2);
-	  w2c = 1;
-	  w2r = (gmg[lev+1].x2s[j] - gmg[lev].x2s[2*j])/gmg[lev].d2[2*j+1];
-	} else if(jj==2*n2){
-	  w2l = (gmg[lev].x2s[2*j-1] - gmg[lev+1].x2s[j-1])/gmg[lev].d2[2*j-1];
-	  w2c = 1;
-	  w2r = 0;//((gmg[lev+1].x2[j] + gmg[lev+1].d2s[j]/2 ) - (gmg[lev].x2[jj] + gmg[lev].d2s[jj] / 2 )) / (gmg[lev].d2s[jj] / 2);
-	}else{
-	  w2l = (gmg[lev].x2s[2*j-1] - gmg[lev+1].x2s[j-1])/gmg[lev].d2[2*j-1];
-	  w2c = 1.;
-	  w2r = (gmg[lev+1].x2s[j] - gmg[lev].x2s[2*j])/gmg[lev].d2[2*j+1];
-	}
-      }else{
-	jj = j;
-	jjm1 = j;
-	jjp1 = j;
-	w2l = 0;
-	w2c = 1;
-	w2r = 0;
-      }
-      for(i=0; i<=n1; i++){
-	if(gmg[lev+1].sc[0]==2) {
-	  ii = 2*i;
-	  iim1 = MAX(ii-1, 0);
-	  iip1 = MIN(ii+1, 2*n1);
-	  if(ii==0){
-	    w1l = 0;//((gmg[lev].x1[0] - gmg[lev].d1s[0]/2) - (gmg[lev+1].x1[0] - gmg[lev+1].d1s[0]/2)) / (gmg[lev].d1s[0] / 2);
-	    w1c = 1;
-	    w1r = (gmg[lev+1].x1s[i] - gmg[lev].x1s[2*i])/gmg[lev].d1[2*i+1];
-	  }else if(ii==2*n1){
-	    w1l = (gmg[lev].x1s[2*i-1] - gmg[lev+1].x1s[i-1])/gmg[lev].d1[2*i-1];
-	    w1c = 1;
-	    w1r = 0;//((gmg[lev+1].x1[i] + gmg[lev+1].d1s[i]/2 ) - (gmg[lev].x1[ii] + gmg[lev].d1s[ii] / 2 )) / (gmg[lev].d1s[ii] / 2);
-	  }else{
-	    w1l = (gmg[lev].x1s[2*i-1] - gmg[lev+1].x1s[i-1])/gmg[lev].d1[2*i-1];
-	    w1c = 1.;
-	    w1r = (gmg[lev+1].x1s[i] - gmg[lev].x1s[2*i])/gmg[lev].d1[2*i+1];
-	  }
-	}else{
-	  ii = i;
-	  iim1 = i;
-	  iip1 = i;
-	  w1l = 0;
-	  w1c = 1;
-	  w1r = 0;
-	}
-
-	if(i<n1){
-	  s1  = w2c*(rx[kk][jj][ii] + rx[kk][jj][iip1]);
-	  s1 += w2l*(rx[kk][jjm1][ii] + rx[kk][jjm1][iip1]);
-	  s1 += w2r*(rx[kk][jjp1][ii] + rx[kk][jjp1][iip1]);
-	  s2  = w2c*(rx[kkm1][jj][ii] + rx[kkm1][jj][iip1]);
-	  s2 += w2l*(rx[kkm1][jjm1][ii] + rx[kkm1][jjm1][iip1]);
-	  s2 += w2r*(rx[kkm1][jjp1][ii] + rx[kkm1][jjp1][iip1]);
-	  s3  = w2c*(rx[kkp1][jj][ii] + rx[kkp1][jj][iip1]);
-	  s3 += w2l*(rx[kkp1][jjm1][ii] + rx[kkp1][jjm1][iip1]);
-	  s3 += w2r*(rx[kkp1][jjp1][ii] + rx[kkp1][jjp1][iip1]);
-	  fx[k][j][i] = (w3c*s1 + w3l*s2 + w3r*s3);
-	  if(gmg[lev+1].sc[0]==1) fx[k][j][i] *= 0.5;
-	}
-	if(j<n2){
-	  s1  = w1c*(ry[kk][jj][ii] + ry[kk][jjp1][ii]);
-	  s1 += w1l*(ry[kk][jj][iim1] + ry[kk][jjp1][iim1]);
-	  s1 += w1r*(ry[kk][jj][iip1] + ry[kk][jjp1][iip1]);
-	  s2  = w1c*(ry[kkm1][jj][ii] + ry[kkm1][jjp1][ii]);
-	  s2 += w1l*(ry[kkm1][jj][iim1] + ry[kkm1][jjp1][iim1]);
-	  s2 += w1r*(ry[kkm1][jj][iip1] + ry[kkm1][jjp1][iip1]);
-	  s3  = w1c*(ry[kkp1][jj][ii] + ry[kkp1][jjp1][ii]);
-	  s3 += w1l*(ry[kkp1][jj][iim1] + ry[kkp1][jjp1][iim1]);
-	  s3 += w1r*(ry[kkp1][jj][iip1] + ry[kkp1][jjp1][iip1]);
-	  fy[k][j][i] = (w3c*s1 + w3l*s2 + w3r*s3);
-	  if(gmg[lev+1].sc[1]==1) fy[k][j][i] *= 0.5;
-	}
-	if(k<n3){
-	  s1  = w1c*(rz[kk][jj][ii] + rz[kkp1][jj][ii]);
-	  s1 += w1l*(rz[kk][jj][iim1] + rz[kkp1][jj][iim1]);
-	  s1 += w1r*(rz[kk][jj][iip1] + rz[kkp1][jj][iip1]);
-	  s2  = w1c*(rz[kk][jjm1][ii] + rz[kkp1][jjm1][ii]);
-	  s2 += w1l*(rz[kk][jjm1][iim1] + rz[kkp1][jjm1][iim1]);
-	  s2 += w1r*(rz[kk][jjm1][iip1] + rz[kkp1][jjm1][iip1]);
-	  s3  = w1c*(rz[kk][jjp1][ii] + rz[kkp1][jjp1][ii]);
-	  s3 += w1l*(rz[kk][jjp1][iim1] + rz[kkp1][jjp1][iim1]);
-	  s3 += w1r*(rz[kk][jjp1][iip1] + rz[kkp1][jjp1][iip1]);
-	  fz[k][j][i] = (w2c*s1 + w2l*s2 + w2r*s3);
-	  if(gmg[lev+1].sc[2]==1) fz[k][j][i] *= 0.5;
-	}
-      }
-    }
-  }
 }
 
-/*< prolongation >*/
+/*< prolongation u from (lev+1) to lev-th grid: coarse to fine grid >*/
 void prolongation(gmg_t *gmg, int lev)
 {
   int i, j, k;
@@ -1593,42 +1445,96 @@ void prolongation(gmg_t *gmg, int lev)
   ux = gmg[lev].u[0];
   uy = gmg[lev].u[1];
   uz = gmg[lev].u[2];
-
   for(kk=0; kk<gmg[lev].n3; kk++){
-    if(gmg[lev+1].sc[2]==2){
-      k=kk/2;
-      kp1=k+1;
-    }else{
-      k=kk;
-      kp1=k+1;
-    }
-    w3r = (gmg[lev].x3[kk]-gmg[lev+1].x3[k]) / (gmg[lev+1].x3[kp1] - gmg[lev+1].x3[k]);
-    w3l = 1 - w3r;
+    k = (gmg[lev+1].sc[2]==2)?(kk/2):kk;
+    kp1 = k+1;
+    w3r = (gmg[lev].x3[kk] - gmg[lev+1].x3[k])/(gmg[lev+1].x3[kp1] - gmg[lev+1].x3[k]);
+    w3l = 1. - w3r;
     for(jj=0; jj<gmg[lev].n2; jj++){
-      if(gmg[lev+1].sc[1]==2){
-	j=jj/2;
-	jp1=j+1;
-      }else{
-	j=jj;
-	jp1=j+1;
-      }
-      w2r = (gmg[lev].x2[jj]-gmg[lev+1].x2[j]) / (gmg[lev+1].x2[jp1] - gmg[lev+1].x2[j]);
-      w2l = 1 - w2r;
+      j = (gmg[lev+1].sc[1]==2)?(jj/2):jj;
+      jp1 = j+1;
+      w2r = (gmg[lev].x2[jj] - gmg[lev+1].x2[j])/(gmg[lev+1].x2[jp1] - gmg[lev+1].x2[j]);
+      w2l = 1. - w2r;
       for(ii=0; ii<gmg[lev].n1; ii++){
-	if(gmg[lev+1].sc[0]==2){
-	  i=ii/2;
-	  ip1=i+1;
-	}else{
-	  i=ii;
-	  ip1=i+1;
-	}
-	w1r = (gmg[lev].x1[ii]-gmg[lev+1].x1[i]) / (gmg[lev+1].x1[ip1] - gmg[lev+1].x1[i]);
-	w1l = 1 - w1r;
-	
-	//2*3*3 components for ux
+	i = (gmg[lev+1].sc[0]==2)?(ii/2):ii;
+	ip1 = i+1;
+	w1r = (gmg[lev].x1[ii] - gmg[lev+1].x1[i])/(gmg[lev+1].x1[ip1] - gmg[lev+1].x1[i]);
+	w1l = 1. - w1r;
+
+	//ii can be 2*i or 2*i+1, we perform same for both cases, that is constant interpolation along x, bilinear interpolation along y and z
 	if(jj>0 && kk>0) ux[kk][jj][ii] += w2l*(w3l*ex[k][j][i] + w3r*ex[kp1][j][i]) + w2r*(w3l*ex[k][jp1][i] + w3r*ex[kp1][jp1][i]);
+	//jj can be 2*j or 2*j+1, we perform same for both cases, that is constant interpolation along y, bilinear interpolation along x and z
 	if(ii>0 && kk>0) uy[kk][jj][ii] += w1l*(w3l*ey[k][j][i] + w3r*ey[kp1][j][i]) + w1r*(w3l*ey[k][j][ip1] + w3r*ey[kp1][j][ip1]);
+	//kk can be 2*k or 2*k+1, we perform same for both cases, that is constant interpolation along z, bilinear interpolation along x and y
 	if(ii>0 && jj>0) uz[kk][jj][ii] += w1l*(w2l*ez[k][j][i] + w2r*ez[k][jp1][i]) + w1r*(w2l*ez[k][j][ip1] + w2r*ez[k][jp1][ip1]);
+      }
+    }
+  }
+  
+}
+
+
+/*< restrict r from lev to (lev+1)-th lev: fine to coarse grid >*/
+//restriction should be the exact adjoint of prolongation!
+void restriction(gmg_t *gmg, int lev)
+{
+  int n1, n2, n3;
+  int i, j, k;
+  int ii, jj, kk;
+  int ip1, jp1, kp1;
+  double w1l, w2l, w3l;
+  double w1r, w2r, w3r;
+  complex ***fx, ***fy, ***fz;
+  complex ***rx, ***ry, ***rz;
+  
+  n1 = gmg[lev+1].n1;
+  n2 = gmg[lev+1].n2;
+  n3 = gmg[lev+1].n3;
+  fx = gmg[lev+1].f[0];
+  fy = gmg[lev+1].f[1];
+  fz = gmg[lev+1].f[2];
+  rx = gmg[lev].r[0];
+  ry = gmg[lev].r[1];
+  rz = gmg[lev].r[2];
+
+  memset(&fx[0][0][0], 0, (n1+1)*(n2+1)*(n3+1)*sizeof(complex));
+  memset(&fy[0][0][0], 0, (n1+1)*(n2+1)*(n3+1)*sizeof(complex));
+  memset(&fz[0][0][0], 0, (n1+1)*(n2+1)*(n3+1)*sizeof(complex));
+  for(kk=0; kk<gmg[lev].n3; kk++){
+    k = (gmg[lev+1].sc[2]==2)?(kk/2):kk;
+    kp1 = k+1;
+    w3r = (gmg[lev].x3[kk] - gmg[lev+1].x3[k])/(gmg[lev+1].x3[kp1] - gmg[lev+1].x3[k]);
+    w3l = 1. - w3r;
+    for(jj=0; jj<gmg[lev].n2; jj++){
+      j = (gmg[lev+1].sc[1]==2)?(jj/2):jj;
+      jp1 = j+1;
+      w2r = (gmg[lev].x2[jj] - gmg[lev+1].x2[j])/(gmg[lev+1].x2[jp1] - gmg[lev+1].x2[j]);
+      w2l = 1. - w2r;
+      for(ii=0; ii<gmg[lev].n1; ii++){
+	i = (gmg[lev+1].sc[0]==2)?(ii/2):ii;
+	ip1 = i+1;
+	w1r = (gmg[lev].x1[ii] - gmg[lev+1].x1[i])/(gmg[lev+1].x1[ip1] - gmg[lev+1].x1[i]);
+	w1l = 1. - w1r;
+
+	//adjoint of prolongation
+	if(jj>0 && kk>0){
+	  fx[k][j][i] += w2l*w3l*rx[kk][jj][ii];
+	  fx[kp1][j][i] += w2l*w3r*rx[kk][jj][ii];
+	  fx[k][jp1][i] += w2r*w3l*rx[kk][jj][ii];
+	  fx[kp1][jp1][i] += w2r*w3r*rx[kk][jj][ii];
+	}
+	if(ii>0 && kk>0){
+	  fy[k][j][i] += w1l*w3l*ry[kk][jj][ii];
+	  fy[kp1][j][i] += w1l*w3r*ry[kk][jj][ii];
+	  fy[k][j][ip1] += w1r*w3l*ry[kk][jj][ii];
+	  fy[kp1][j][ip1] += w1r*w3r*ry[kk][jj][ii];
+	}
+	if(ii>0 && jj>0){
+	  fz[k][j][i] += w1l*w2l*rz[kk][jj][ii];
+	  fz[k][jp1][i] += w1l*w2r*rz[kk][jj][ii];
+	  fz[k][j][ip1] += w1r*w2l*rz[kk][jj][ii];
+	  fz[k][jp1][ip1] += w1r*w2r*rz[kk][jj][ii];
+	}
       }
     }
   }
@@ -1739,7 +1645,7 @@ void w_cycle(gmg_t *gmg, int lev)
 }
 
 
-/*< Gauss-Seidel iterations without v-cycle, a good validation for GS smoothing >*/
+/*< Gauss-Seidel iterations without v-cycle >*/
 void gs_iterations(gmg_t *gmg, int lev)
 {
   int n, i;
