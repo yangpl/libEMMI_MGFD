@@ -1417,10 +1417,13 @@ void compute_H_from_E(gmg_t *gmg, int lev)
       for(i=0; i<n1; i++){
 	ip1 = MIN(i+1, n1);
 	t1 = (Ez[k][jp1][i]-Ez[k][j][i])/d2s[j] - (Ey[kp1][j][i]-Ey[k][j][i])/d3s[k];//\partial_y Ez - \partial_z Ey
+	t1 *= 0.5*(invmur[k][j][i] + invmur[k][j][im1]);//Hx(i,J,K)
 	Hx[k][j][i] = t1/(I*omega*mu0);//Hx(i,J,K)
 	t2 = (Ex[kp1][j][i]-Ex[k][j][i])/d3s[k] - (Ez[k][j][ip1]-Ez[k][j][i])/d1s[i];//\partial_z Ex - \partial_x Ez
+	t2 *= 0.5*(invmur[k][j][i] + invmur[k][jm1][i]);//Hy(I,j,K)
 	Hy[k][j][i] = t2/(I*omega*mu0);//Hy(I,j,K)
 	t3 = (Ey[k][j][ip1]-Ey[k][j][i])/d1s[i] - (Ex[k][jp1][i]-Ex[k][j][i])/d2s[j];//\partial_x Ey - \partial_y Ex
+	t3 *= 0.5*(invmur[k][j][i] + invmur[km1][j][i]);//Hz(I,J,k)
 	Hz[k][j][i] = t3/(I*omega*mu0);//Hz(I,J,k)
       }
     }
