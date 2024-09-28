@@ -1386,9 +1386,11 @@ void compute_H_from_E(gmg_t *gmg, int lev)
 {
   int i, j, k;
   int ip1, jp1, kp1;
+  int im1, jm1, km1;
   int n1, n2, n3, n;
   complex t1, t2, t3;
   double *d1s, *d2s, *d3s;
+  double ***invmur;
   complex ***Ex, ***Ey, ***Ez;
   complex ***Hx, ***Hy, ***Hz;
 
@@ -1404,6 +1406,7 @@ void compute_H_from_E(gmg_t *gmg, int lev)
   Hx = gmg[lev].f[0];
   Hy = gmg[lev].f[1];
   Hz = gmg[lev].f[2];
+  invmur = gmg[lev].invmur;
 
   n = (n1+1)*(n2+1)*(n3+1);
   memset(&Hx[0][0][0], 0, n*sizeof(complex));
@@ -1412,10 +1415,14 @@ void compute_H_from_E(gmg_t *gmg, int lev)
   
   for(k=0; k<n3; k++){
     kp1 = MIN(k+1, n3);
+    km1 = MAX(k-1, 0);
     for(j=0; j<n2; j++){
       jp1 = MIN(j+1, n2);
+      jm1 = MAX(j-1, 0);
       for(i=0; i<n1; i++){
 	ip1 = MIN(i+1, n1);
+	im1 = MAX(i-1, 0);
+
 	t1 = (Ez[k][jp1][i]-Ez[k][j][i])/d2s[j] - (Ey[kp1][j][i]-Ey[k][j][i])/d3s[k];//\partial_y Ez - \partial_z Ey
 	t1 *= 0.5*(invmur[k][j][i] + invmur[k][j][im1]);//Hx(i,J,K)
 	Hx[k][j][i] = t1/(I*omega*mu0);//Hx(i,J,K)
