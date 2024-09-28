@@ -1423,14 +1423,12 @@ void compute_H_from_E(gmg_t *gmg, int lev)
 	ip1 = MIN(i+1, n1);
 	im1 = MAX(i-1, 0);
 
+	//here we assume mu=mu0, note invmur has been multiplied with cell volume
 	t1 = (Ez[k][jp1][i]-Ez[k][j][i])/d2s[j] - (Ey[kp1][j][i]-Ey[k][j][i])/d3s[k];//\partial_y Ez - \partial_z Ey
-	t1 *= 0.5*(invmur[k][j][i] + invmur[k][j][im1]);//Hx(i,J,K)
 	Hx[k][j][i] = t1/(I*omega*mu0);//Hx(i,J,K)
 	t2 = (Ex[kp1][j][i]-Ex[k][j][i])/d3s[k] - (Ez[k][j][ip1]-Ez[k][j][i])/d1s[i];//\partial_z Ex - \partial_x Ez
-	t2 *= 0.5*(invmur[k][j][i] + invmur[k][jm1][i]);//Hy(I,j,K)
 	Hy[k][j][i] = t2/(I*omega*mu0);//Hy(I,j,K)
 	t3 = (Ey[k][j][ip1]-Ey[k][j][i])/d1s[i] - (Ex[k][jp1][i]-Ex[k][j][i])/d2s[j];//\partial_x Ey - \partial_y Ex
-	t3 *= 0.5*(invmur[k][j][i] + invmur[km1][j][i]);//Hz(I,J,k)
 	Hz[k][j][i] = t3/(I*omega*mu0);//Hz(I,J,k)
       }
     }
@@ -1566,19 +1564,17 @@ void v_cycle(gmg_t *gmg, int lev)
 {
   int n, i;
 
-  if(cycleopt==1 && lev==0){//compute the norm of the residual
-    residual(gmg, lev);//residual r=f-Au at lev-th lev
-    n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
-    rnorm = sqrt(creal(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
-    if(verb) printf("icycle=%d rnorm=%e\n", icycle, rnorm);
-
-    if(icycle==0) rnorm0 = rnorm;
-    else if(rnorm<rnorm0*tol) { icycle=ncycle; return; }
-  }
-
   for(i=0; i<v1; i++) smoothing(gmg, lev, i);//pre-smoothing of u based on u,f at lev-th level
   if(lev<lmax-1 && gmg[lev+1].sc[0]*gmg[lev+1].sc[1]*gmg[lev+1].sc[2]>1){
     residual(gmg, lev);//residual r=f-Au at lev-th lev
+    if(cycleopt==1 && lev==0){//compute the norm of the residual
+      n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
+      rnorm = sqrt(creal(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
+      if(verb) printf("icycle=%d rnorm=%e\n", icycle, rnorm);
+
+      if(icycle==0) rnorm0 = rnorm;
+      else if(rnorm<rnorm0*tol) { icycle=ncycle; return; }
+    }
     restriction(gmg, lev);//restrict gmg[lev].r to gmg[lev+1].f 
 
     n = 3*(gmg[lev+1].n1+1)*(gmg[lev+1].n2+1)*(gmg[lev+1].n3+1);
