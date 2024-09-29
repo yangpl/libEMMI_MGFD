@@ -1707,8 +1707,8 @@ void gmg_init(emf_t *emf, int ifreq)
   verb = emf->verb; //verbosity display, 1=verbose, 0=not 
   if(!getparint("cycleopt", &cycleopt)) cycleopt = 2;/* 1=V cycle; 2=F cycle; 3=W cycle */
   if(!getparint("ncycle", &ncycle)) ncycle = 30;/* number of multigrid cycles */  
-  if(!getparint("v1", &v1)) v1 = 0;/* number of pre-smoothing */
-  if(!getparint("v2", &v2)) v2 = 2;/* number of post-smoothing */
+  if(!getparint("v1", &v1)) v1 = 1;/* number of pre-smoothing */
+  if(!getparint("v2", &v2)) v2 = 1;/* number of post-smoothing */
   if(!getpardouble("tol", &tol)) tol = 1e-6;/* stopping criteria */
   if(!getparint("isemicoarsen", &isemicoarsen)) isemicoarsen = 1;/*1=semi-coarsening; 0=no semi-coarsening */
   if(!getparint("lmax", &lmax)) {
