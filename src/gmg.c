@@ -1386,11 +1386,9 @@ void compute_H_from_E(gmg_t *gmg, int lev)
 {
   int i, j, k;
   int ip1, jp1, kp1;
-  int im1, jm1, km1;
   int n1, n2, n3, n;
   complex t1, t2, t3;
   double *d1s, *d2s, *d3s;
-  double ***invmur;
   complex ***Ex, ***Ey, ***Ez;
   complex ***Hx, ***Hy, ***Hz;
 
@@ -1406,7 +1404,6 @@ void compute_H_from_E(gmg_t *gmg, int lev)
   Hx = gmg[lev].f[0];
   Hy = gmg[lev].f[1];
   Hz = gmg[lev].f[2];
-  invmur = gmg[lev].invmur;
 
   n = (n1+1)*(n2+1)*(n3+1);
   memset(&Hx[0][0][0], 0, n*sizeof(complex));
@@ -1415,13 +1412,10 @@ void compute_H_from_E(gmg_t *gmg, int lev)
   
   for(k=0; k<n3; k++){
     kp1 = MIN(k+1, n3);
-    km1 = MAX(k-1, 0);
     for(j=0; j<n2; j++){
       jp1 = MIN(j+1, n2);
-      jm1 = MAX(j-1, 0);
       for(i=0; i<n1; i++){
 	ip1 = MIN(i+1, n1);
-	im1 = MAX(i-1, 0);
 
 	//here we assume mu=mu0, note invmur has been multiplied with cell volume
 	t1 = (Ez[k][jp1][i]-Ez[k][j][i])/d2s[j] - (Ey[kp1][j][i]-Ey[k][j][i])/d3s[k];//\partial_y Ez - \partial_z Ey
@@ -1621,23 +1615,17 @@ void w_cycle(gmg_t *gmg, int lev)
 {
   int n, i;
 
-  if(cycleopt==3 && lev==0){//compute the norm of the residual
+  for(i=0; i<v1; i++) smoothing(gmg, lev, i);//pre-smoothing of u based on u,f at lev-th level
+  if(lev<lmax-1){
     residual(gmg, lev);//residual r=f-Au at lev-th lev
-    n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
-    rnorm = sqrt(creal(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
-    if(verb) printf("icycle=%d rnorm=%e\n", icycle, rnorm);
+    if(cycleopt==3 && lev==0){//compute the norm of the residual
+      n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
+      rnorm = sqrt(creal(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
+      if(verb) printf("icycle=%d rnorm=%e\n", icycle, rnorm);
       
-    if(icycle==0) rnorm0 = rnorm;
-    else if(rnorm<rnorm0*tol) { icycle=ncycle; return; }
-  }
-
-  if(lev==lmax-1){
-    //then nx=ny=2, grid size=3*3, only 1 point at the center is unknwn
-    //direct solve is equivalent to smoothing at center point
-    for(i=0; i<v1; i++) smoothing(gmg, lev, i);
-  }else{
-    for(i=0; i<v1; i++) smoothing(gmg, lev, i);//pre-smoothing of u based on u,f at lev-th level
-    residual(gmg, lev);//residual r=f-Au at lev-th lev
+      if(icycle==0) rnorm0 = rnorm;
+      else if(rnorm<rnorm0*tol) { icycle=ncycle; return; }
+    }
     restriction(gmg, lev);//restrict r at lev-th lev to gmg[lev+1].f 
 
     n = 3*(gmg[lev+1].n1+1)*(gmg[lev+1].n2+1)*(gmg[lev+1].n3+1);
@@ -1646,23 +1634,10 @@ void w_cycle(gmg_t *gmg, int lev)
     w_cycle(gmg, lev+1);// another w-cycle at (lev+1)-th level
 
     prolongation(gmg, lev);//interpolate r^h=gmg[lev+1].u to r^2h from (lev+1) to lev-th level
-    for(i=0; i<v2; i++) smoothing(gmg, lev, i);//post-smoothing
   }
+  for(i=0; i<v2; i++) smoothing(gmg, lev, i);//post-smoothing
 }
 
-
-/*< Gauss-Seidel iterations without v-cycle >*/
-void gs_iterations(gmg_t *gmg, int lev)
-{
-  int n, i;
-  for(i=0; i<ncycle; i++){
-    residual(gmg, lev);//residual r=f-Au at lev-th lev
-    n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
-    rnorm = sqrt(creall(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
-    printf("rnorm=%e\n", rnorm);
-    smoothing(gmg, lev, 1);
-  }
-}
 
 
 /*< use x1[] to derive x1s[], d1[], d1s[] >*/
@@ -1930,6 +1905,15 @@ void gmg_apply(int n, complex *b, complex *x)
     if(cycleopt==2) f_cycle(gmg, 0);
     if(cycleopt==3) w_cycle(gmg, 0);//not recommended
     for(lev=1; lev<lmax; lev++) grid_close(gmg, lev);
+
+    /*
+    // Gauss-Seidel iterations without v-cycle
+    residual(gmg, lev);//residual r=f-Au at lev-th lev
+    n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
+    rnorm = sqrt(creal(inner_product(n, &gmg[lev].r[0][0][0][0], &gmg[lev].r[0][0][0][0])));
+    printf("rnorm=%e\n", rnorm);
+    smoothing(gmg, lev, 1);
+    */
   }
   memcpy(x, &gmg[0].u[0][0][0][0], n*sizeof(complex));//copy E into x
   compute_H_from_E(gmg, 0);//compute H and store it in gmg[0].f
