@@ -232,7 +232,7 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	m1 = 0.5*(invmur[k][jm1][i] + invmur[k][jm1][im1]);//Hx(i,J-1,K)
 	m2 = 0.5*(invmur[km1][jm1][i] + invmur[km1][jm1][im1]);//Hx(i,J-1,K-1)
 	m3 = 0.5*(invmur[k][jm1][i] + invmur[km1][jm1][i]);//Hz(I,J-1,k)
-	m4 = 0.5*(invmur[k][jm1][i] + invmur[km1][jm1][im1]);//Hz(I-1,J-1,k)
+	m4 = 0.5*(invmur[k][jm1][im1] + invmur[km1][jm1][im1]);//Hz(I-1,J-1,k)
 	t1 *= m1;
 	t2 *= m2;
 	t3 *= m3;
