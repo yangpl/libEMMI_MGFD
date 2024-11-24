@@ -242,7 +242,7 @@ void acq_init(acq_t *acq, emf_t * emf)
   }/* end for irec */
   printf("****** isrc=%d nrec=%d, [x,y,z,azimuth,dip]=[%g, %g, %g, %g, %g]\n",
 	 acq->shot_idx[iproc], acq->nrec, acq->src_x1[0], acq->src_x2[0],
-	 acq->src_x3[0], 180*acq->src_azimuth[0]/PI, 190.*acq->src_dip[0]/PI);
+	 acq->src_x3[0], 180*acq->src_azimuth[0]/PI, 180.*acq->src_dip[0]/PI);
   if(emf->verb){
     printf("lensrc=%g, nsubsrc=%d\n", acq->lensrc, acq->nsubsrc);
     printf("lenrec=%g, nsubrec=%d\n", acq->lenrec, acq->nsubrec);
