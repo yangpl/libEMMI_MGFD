@@ -257,17 +257,17 @@ void acq_init(acq_t *acq, emf_t * emf)
 /*< free the allocated variables for acquisition >*/
 void acq_close(acq_t *acq)
 {
-  free(acq->src_x1);
-  free(acq->src_x2);
-  free(acq->src_x3);
-  free(acq->src_azimuth);
-  free(acq->src_dip);
+  free1float(acq->src_x1);
+  free1float(acq->src_x2);
+  free1float(acq->src_x3);
+  free1float(acq->src_azimuth);
+  free1float(acq->src_dip);
 
-  free(acq->rec_x1);
-  free(acq->rec_x2);
-  free(acq->rec_x3);
-  free(acq->rec_azimuth);
-  free(acq->rec_dip);
+  free1float(acq->rec_x1);
+  free1float(acq->rec_x2);
+  free1float(acq->rec_x3);
+  free1float(acq->rec_azimuth);
+  free1float(acq->rec_dip);
 
   free1int(acq->shot_idx);
 }
