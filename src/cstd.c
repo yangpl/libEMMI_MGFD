@@ -658,7 +658,7 @@ void free3double(double ***p)
 /* allocate a 1-d array of complexs */
 _Complex float *alloc1complexf(size_t n1)
 {
-    return (float complex*)alloc1(n1,sizeof(_Complex float));
+    return (_Complex float*)alloc1(n1,sizeof(_Complex float));
 }
 
 /* re-allocate a 1-d array of complexs */
