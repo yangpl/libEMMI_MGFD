@@ -1543,13 +1543,13 @@ void restriction(gmg_t *gmg, int lev)
   
 }
 
-/*< compute dot product between two vectors s=<x,y> >*/
+/*< compute dot product between two vectors s=<x,y>=x^H*y >*/
 complex inner_product(int n, complex *x, complex *y)
 {
   int i;
   complex s;
 
-  for(i=0, s=0; i<n; i++) s += x[i]*conj(y[i]);
+  for(i=0, s=0; i<n; i++) s += conj(x[i])*y[i];
   return s;
 }
 
