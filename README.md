@@ -1,6 +1,9 @@
 # 3D CSEM modelling and inversion using multigrid frequency-domain solver
 
-Author: Pengliang Yang, ypl.2100@gmail.com
+Author: Pengliang Yang
+
+E-mail: ypl.2100@gmail.com
+
 Department of Mathematics, Harbin Institute of Technology, China
 
 Note: This modelling code requires installation of MPI (either mpich or openmpi),
@@ -45,6 +48,7 @@ Modify run.sh to set "mode=1 frho11=frho_init frho22=frho_init frho33=frho_init"
 
 
 ## Acknowledgements
+
 Pengliang Yang is indebted to Dieter Werthmüller for responsive feedback in last two years to develop the
 geometrical multigrid code using C programming language. Without his help and the Python code emg3d,
 it is not possible to complete libEMMI_MGFD to share with the community.
