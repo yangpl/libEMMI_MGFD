@@ -2,15 +2,15 @@
 
 Author: Pengliang Yang
 
-E-mail: ypl.2100@gmail.com
-
 Department of Mathematics, Harbin Institute of Technology, China
+
+E-mail: ypl.2100@gmail.com
 
 Note: This modelling code requires installation of MPI (either mpich or openmpi),
 as it has a parallel computing idea in mind since its design, to make it work 
 for inversion simultaneously with multiple sources.
 
-#----------------------------------------------------
+----------------------------------------------------
 
 Instructions to run:
 
