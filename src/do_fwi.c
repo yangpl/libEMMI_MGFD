@@ -34,7 +34,7 @@ void cg_solve(int n, //dimension of x
 	      opt_t *opt); //pointer of l-BFGS optimization parameters
 
 void fg_fwi_init(acq_t *acq_, emf_t *emf_, fwi_t *fwi_);
-void fg_fwi_close();
+void fg_fwi_free();
 float fg_fwi(float *x, float *g);
 void Hv_fwi(float *x, float *v, float *Hv);
 void precondition(emf_t *emf, fwi_t *fwi, float *g);
@@ -230,7 +230,7 @@ void do_fwi(acq_t *acqui, emf_t *emf)
     }
   }
 
-  fg_fwi_close();
+  fg_fwi_free();
   free1float(opt->x);
   free1float(opt->g);
   free1float(opt->d);  

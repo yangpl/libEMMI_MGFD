@@ -14,10 +14,10 @@
 #include "constants.h"
 
 void regrid_init(acq_t *acq, emf_t *emf, int ifreq);
-void regrid_close(emf_t *emf);
+void regrid_free(emf_t *emf);
 
 void gmg_init(emf_t *emf, int ifreq);
-void gmg_close();
+void gmg_free();
 void gmg_apply(int n, complex *b, complex *x);
 
 void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq);
@@ -64,8 +64,8 @@ void do_modelling(acq_t *acq, emf_t *emf)
     free1complex(x);
     free1complex(b);
     
-    gmg_close();
-    regrid_close(emf);
+    gmg_free();
+    regrid_free(emf);
   }
   char fname[sizeof("emf_0000.txt")];
   sprintf(fname, "emf_%04d.txt", acq->shot_idx[iproc]);

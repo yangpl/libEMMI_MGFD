@@ -1834,7 +1834,7 @@ void grid_init(gmg_t *gmg, int lev)
 }
 
 /*< free the variables and the memory at different multigrid levels >*/
-void grid_close(gmg_t *gmg, int lev)
+void grid_free(gmg_t *gmg, int lev)
 {
   free1double(gmg[lev].x1);
   free1double(gmg[lev].x2);
@@ -1858,9 +1858,9 @@ void grid_close(gmg_t *gmg, int lev)
 }
 
 /*< free the multigrid solver >*/
-void gmg_close()
+void gmg_free()
 {
-  grid_close(gmg, 0);
+  grid_free(gmg, 0);
   free(gmg);
 }
 
@@ -1904,7 +1904,7 @@ void gmg_apply(int n, complex *b, complex *x)
     if(cycleopt==1) v_cycle(gmg, 0);
     if(cycleopt==2) f_cycle(gmg, 0);
     if(cycleopt==3) w_cycle(gmg, 0);//not recommended
-    for(lev=1; lev<lmax; lev++) grid_close(gmg, lev);
+    for(lev=1; lev<lmax; lev++) grid_free(gmg, lev);
 
     /*
     // Gauss-Seidel iterations without v-cycle

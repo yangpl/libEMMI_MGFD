@@ -300,7 +300,7 @@ void regrid_init(acq_t *acq, emf_t *emf, int ifreq)
 }
 
 /*< free variables in emf >*/
-void regrid_close(emf_t *emf)
+void regrid_free(emf_t *emf)
 {
   free1float(emf->x1);
   free1float(emf->x2);

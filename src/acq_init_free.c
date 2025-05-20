@@ -255,7 +255,7 @@ void acq_init(acq_t *acq, emf_t * emf)
 }
 
 /*< free the allocated variables for acquisition >*/
-void acq_close(acq_t *acq)
+void acq_free(acq_t *acq)
 {
   free1float(acq->src_x1);
   free1float(acq->src_x2);

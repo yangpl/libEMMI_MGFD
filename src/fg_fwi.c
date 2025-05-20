@@ -25,10 +25,10 @@ void write_data(acq_t *acq, emf_t *emf, char *fname, _Complex float ***dcal_fd);
 float cal_uncertainty_noise(acq_t *acq, emf_t *emf);
 
 void regrid_init(acq_t *acq, emf_t *emf, int ifreq);
-void regrid_close(emf_t *emf);
+void regrid_free(emf_t *emf);
 
 void gmg_init(emf_t *emf, int ifreq);
-void gmg_close();
+void gmg_free();
 void gmg_apply(int n, complex *b, complex *x);
 
 void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq);
@@ -123,7 +123,7 @@ void fg_fwi_init(acq_t *acq_, emf_t *emf_, fwi_t *fwi_)
   fwi->alpha = 1;//initialize the scaling factor
 }
 
-void fg_fwi_close()
+void fg_fwi_free()
 {
   free2float(emf->bathy);
   free3complexf(emf->dobs_fd);
@@ -200,8 +200,8 @@ float fg_fwi(float *xx, float *g)
     free1complex(x);
     free1complex(b);
     
-    gmg_close();
-    regrid_close(emf);
+    gmg_free();
+    regrid_free(emf);
   }
   sprintf(fname, "syn_%04d.txt", acq->shot_idx[iproc]);
   write_data(acq, emf, fname, emf->dcal_fd);
@@ -257,8 +257,8 @@ float fg_fwi(float *xx, float *g)
     free1complex(x);
     free1complex(b);
     
-    gmg_close();
-    regrid_close(emf);
+    gmg_free();
+    regrid_free(emf);
   }
 
   if(emf->verb) printf("----------step 4: compute gradient --------------\n");

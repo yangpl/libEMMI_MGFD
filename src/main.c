@@ -14,10 +14,10 @@
 int iproc, nproc, ierr;
 
 void emf_init(emf_t *emf);
-void emf_close(emf_t *emf);
+void emf_free(emf_t *emf);
 
 void acq_init(acq_t *acq, emf_t * emf);
-void acq_close(acq_t *acq);
+void acq_free(acq_t *acq);
 
 void do_modelling(acq_t *acq, emf_t *emf);
 void do_fwi(acq_t *acq, emf_t *emf);
@@ -69,8 +69,8 @@ int main(int argc, char **argv)
   else
     do_fwi(acq, emf);
 
-  acq_close(acq);
-  emf_close(emf);
+  acq_free(acq);
+  emf_free(emf);
 
   free(emf);
   free(acq);

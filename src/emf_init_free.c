@@ -136,7 +136,7 @@ void emf_init(emf_t *emf)
 }
 
 
-void emf_close(emf_t *emf)
+void emf_free(emf_t *emf)
 {
   free3float(emf->rho11);
   free3float(emf->rho22);
