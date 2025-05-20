@@ -9,8 +9,8 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "mpi_info.h"
-#include "constants.h"
+ 
+ 
 
 /*< read acquisition file to initialize survey geometry >*/
 void acq_init(acq_t *acq, emf_t * emf)

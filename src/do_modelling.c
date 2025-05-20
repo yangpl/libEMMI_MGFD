@@ -10,8 +10,8 @@
 #include "cstd.h"
 #include "emf.h"
 #include "acq.h"
-#include "mpi_info.h"
-#include "constants.h"
+ 
+ 
 
 void regrid_init(acq_t *acq, emf_t *emf, int ifreq);
 void regrid_free(emf_t *emf);

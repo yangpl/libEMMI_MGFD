@@ -8,7 +8,7 @@
  *-----------------------------------------------------------------------*/
 #include "cstd.h"
 #include "emf.h"
-#include "constants.h"
+ 
 
 int verb;
 int cycleopt;//1=v cycle; 2=f cycle; 3=w cycle

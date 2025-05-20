@@ -10,7 +10,7 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "constants.h"
+ 
 
 float create_nugrid(int n, float len, float dx, float *x, int istretch);
 void homogenization(emf_t *emf, float ***sigma_in, float ***sigma_out, int flag);

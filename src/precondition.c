@@ -8,7 +8,7 @@
 #include "cstd.h"
 #include "emf.h"
 #include "fwi.h"
-#include "constants.h"
+ 
 
 void triangle_smoothing(float ***mod, int n1, int n2, int n3, int r1, int r2, int r3, int repeat);
 

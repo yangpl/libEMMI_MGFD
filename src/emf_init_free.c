@@ -8,7 +8,7 @@
  *-----------------------------------------------------------------------*/
 #include "cstd.h"
 #include "emf.h"
-#include "constants.h"
+ 
 
 int find_good_size(int n);
 int cmpfunc(const void *a, const void *b) { return ( *(int*)a - *(int*)b ); }

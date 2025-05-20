@@ -9,7 +9,7 @@
 #include "cstd.h"
 #include "emf.h"
 #include "acq.h"
-#include "mpi_info.h"
+ 
 
 int iproc, nproc, ierr;
 

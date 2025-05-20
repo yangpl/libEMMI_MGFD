@@ -10,7 +10,7 @@
 #include "acq.h"
 #include "emf.h"
 #include "fwi.h"
-#include "constants.h"
+ 
 
 float regularization_tikhonov(float *x, float *g, int n1, int n2, int n3, float d1, float d2, float d3);
 float regularization_tv(float *x, float *g, int n1, int n2, int n3, float d1, float d2, float d3);

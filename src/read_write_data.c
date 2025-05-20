@@ -9,7 +9,7 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "mpi_info.h"
+ 
 
 void write_data(acq_t *acq, emf_t *emf, char *fname, _Complex float ***dcal_fd)
 /*< write synthetic data according to shot/process index >*/

@@ -32,6 +32,13 @@
 #ifndef NINT
 #define NINT(x) ((int)((x)>0.0?(x)+0.5:(x)-0.5))
 #endif
+#ifndef PI
+#define PI 3.14159265358979323846264
+#endif
+#ifndef mu0
+#define mu0 (4.*PI*1e-7)
+#endif
+
 
 /* allocate and free multi-dimensional arrays */
 void *alloc1 (size_t n1, size_t size);
@@ -84,15 +91,15 @@ void free2double (double **p);
 void free3double (double ***p);
 
 
-_Complex float *alloc1complexf(size_t n1);
-_Complex float *realloc1complexf(_Complex float *v, size_t n1);
-_Complex float **alloc2complexf(size_t n1, size_t n2);
-_Complex float ***alloc3complexf(size_t n1, size_t n2, size_t n3);
-_Complex float ****alloc4complexf(size_t n1, size_t n2, size_t n3, size_t n4);
-void free1complexf(_Complex float *p);
-void free2complexf(_Complex float **p);
-void free3complexf(_Complex float ***p);
-void free4complexf(_Complex float ****p);
+float _Complex *alloc1complexf(size_t n1);
+float _Complex *realloc1complexf(float _Complex *v, size_t n1);
+float _Complex **alloc2complexf(size_t n1, size_t n2);
+float _Complex ***alloc3complexf(size_t n1, size_t n2, size_t n3);
+float _Complex ****alloc4complexf(size_t n1, size_t n2, size_t n3, size_t n4);
+void free1complexf(float _Complex *p);
+void free2complexf(float _Complex **p);
+void free3complexf(float _Complex ***p);
+void free4complexf(float _Complex ****p);
 
 double _Complex *alloc1complex(size_t n1);
 double _Complex *realloc1complex(double _Complex *v, size_t n1);
@@ -111,6 +118,9 @@ void free1char(char *p);
 /* GLOBAL DECLARATIONS */
 extern int xargc; 
 extern char **xargv;
+
+//MPI related
+extern int iproc, nproc, ierr;
 
 /* FUNCTION PROTOTYPES */
 

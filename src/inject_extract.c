@@ -11,7 +11,7 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "constants.h"
+ 
 
 /*< find the index k in x[] such that x[k]<= val <x[k+1] >*/
 int find_index(int n, float *x, float val);

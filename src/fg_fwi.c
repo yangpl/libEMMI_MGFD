@@ -11,8 +11,8 @@
 #include "acq.h"
 #include "emf.h"
 #include "fwi.h"
-#include "constants.h"
-#include "mpi_info.h"
+ 
+ 
 
 acq_t *acq;
 emf_t *emf;
