@@ -195,15 +195,14 @@ void regrid_init(acq_t *acq, emf_t *emf)
   np2 = emf->n3 - np1;
 
   for(i3=0; i3<=np1; i3++) emf->x3[i3] = emf->zz[i3];
-  if(emf->verb) printf("top above the source: use %d grid from input model\n", np1);
+  if(emf->verb) printf("top above the source: use %d cells from input model\n", np1);
     
   x = alloc1float(np2+1);
   dist = emf->x3max - emf->x3[np1];
   r = create_nugrid(np2, dist, emf->d3min, x);
   for(i3=0; i3<=np2; i3++) emf->x3[np1+i3] = emf->x3[np1] + x[i3];
   free1float(x);
-  if(emf->verb) printf("bottom stretching r=%g\n", r);
-  
+  if(emf->verb) printf("bottom stretching r=%g\n", r);  
 
   //this will be used for extraction of EM data at receiver locations
   generate_staggered_xs_dx(emf->n1, emf->x1, emf->x1s, emf->d1, emf->d1s);
