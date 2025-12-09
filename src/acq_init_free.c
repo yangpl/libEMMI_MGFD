@@ -23,7 +23,7 @@ void acq_init(acq_t *acq, emf_t * emf)
   char *fsrc, *frec, *fsrcrec;
   FILE *fp=NULL;
 
-  if(iproc==0) printf("---------acquisition init ---------\n");
+  if(iproc==0) printf("---------acq_init ---------\n");
   if(!(getparstring("fsrc", &fsrc))) err("Need fsrc= ");
   /* file to specify all possible source locations */
   if(!(getparstring("frec", &frec))) err("Need frec= ");
