@@ -17,18 +17,15 @@
 #To output 3D EM fields after modelling, set icheck=1;
 #You can visualize them also by python3 plot_tensormesh_3d.py!
 
-#To model a full space model without air, set addair=0
-
 #To model with mutiple frequencies, set freqs=0.25,0.75
 
 #To record EM fields from multiple components, set chrec=Ex,Ey,Hx,Hy
 
 #The azimuth and dip angles are set in source and receiver files, check out them!
 
-time mpirun -n 1 ../bin/main mode=0 \
+mpirun -n 1 time -v ../bin/main mode=0 \
      icheck=1 \
      istretch=1 \
-     addair=1 \
      freqs=0.25 ,0.75 \
      chsrc=Ex \
      chrec=Ex,Ey,Hx,Hy \
@@ -41,7 +38,6 @@ time mpirun -n 1 ../bin/main mode=0 \
      ox=-10000 \
      oy=-10000 \
      oz=0 \
-     nb_air=10 \
      n1=160 \
      n2=160 \
      n3=160 \
