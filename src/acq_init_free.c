@@ -10,8 +10,6 @@
 #include "acq.h"
 #include "emf.h"
  
- 
-
 /*< read acquisition file to initialize survey geometry >*/
 void acq_init(acq_t *acq, emf_t * emf)
 {
@@ -25,13 +23,13 @@ void acq_init(acq_t *acq, emf_t * emf)
   char *fsrc, *frec, *fsrcrec;
   FILE *fp=NULL;
 
+  if(iproc==0) printf("---------acquisition init ---------\n");
   if(!(getparstring("fsrc", &fsrc))) err("Need fsrc= ");
   /* file to specify all possible source locations */
   if(!(getparstring("frec", &frec))) err("Need frec= ");
   /* file to specify all possible receiver locations */
   if(!(getparstring("fsrcrec", &fsrcrec))) err("Need fsrcrec= ");
   /* file to specify how source and receiver are combined */
-
   if(!getparfloat("x1min", &acq->x1min)) acq->x1min = emf->ox;
   /* minimum limit of the survey in x direction */
   if(!getparfloat("x1max", &acq->x1max)) acq->x1max = emf->ox+emf->nx*emf->dx;

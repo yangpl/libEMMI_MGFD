@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     printf("  Current date and time: %s\n", current_time);
     printf("=====================================================\n");
     printf("    Welcome to EM modeling and inversion code        \n");
-    printf("    -------------lib_EMMI_MGFD---------------        \n");
+    printf("    -------------libEMMI_MGFD---------------        \n");
     printf("            Author: Pengliang Yang                   \n");
     printf("            E-mail: ypl.2100@gmail.com               \n");
     printf("    Copyright (c) 2023. All rights reserved.         \n");

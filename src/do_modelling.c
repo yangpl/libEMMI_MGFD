@@ -10,10 +10,8 @@
 #include "cstd.h"
 #include "emf.h"
 #include "acq.h"
- 
- 
 
-void regrid_init(acq_t *acq, emf_t *emf, int ifreq);
+void regrid_init(acq_t *acq, emf_t *emf);
 void regrid_free(emf_t *emf);
 
 void gmg_init(emf_t *emf, int ifreq);
@@ -32,6 +30,7 @@ void do_modelling(acq_t *acq, emf_t *emf)
   int ifreq, n, icheck;
   complex *x, *b;
   FILE *fp;
+  char fname[sizeof("emf_0000.txt")];
 
   if(!getparint("icheck", &icheck)) icheck = 0;//1=check out EM field
   if(icheck){
@@ -43,17 +42,17 @@ void do_modelling(acq_t *acq, emf_t *emf)
     emf->H3 = alloc4complexf(emf->nx, emf->ny, emf->nz, emf->nfreq);
   }
   emf->dcal_fd = alloc3complexf(acq->nrec, emf->nfreq, emf->nchrec);
-  
+  n = 3*(emf->n1+1)*(emf->n2+1)*(emf->n3+1);
+  x = alloc1complex(n);//vector E=(Ex,Ey,Ez)^T
+  b = alloc1complex(n);//vector Js=(Jx,Jy,Jz)^T
+  memset(b, 0, n*sizeof(complex));//initialize x=0
+  regrid_init(acq, emf);  
   for(ifreq=0; ifreq<emf->nfreq; ifreq++){
-    regrid_init(acq, emf, ifreq);  
     gmg_init(emf, ifreq);
 
-    n = 3*emf->n123pad;
-    x = alloc1complex(n);//vector E=(Ex,Ey,Ez)^T
-    b = alloc1complex(n);//vector Js=(Jx,Jy,Jz)^T
     inject_source(acq, emf, b, ifreq);//initialize b=i*omega*mu*Js
     memset(x, 0, n*sizeof(complex));//initialize x=0
-
+    
     gmg_apply(n, b, x);//after multigrid convergence, x=(Ex,Ey,Ez)^T
     extract_emf_data(acq, emf, x, b, ifreq);
     if(icheck){
@@ -61,13 +60,12 @@ void do_modelling(acq_t *acq, emf_t *emf)
       extract_magnetic_field(acq, emf, b, ifreq);
     }
     
-    free1complex(x);
-    free1complex(b);
-    
     gmg_free();
-    regrid_free(emf);
   }
-  char fname[sizeof("emf_0000.txt")];
+  free1complex(x);
+  free1complex(b);
+  regrid_free(emf);
+    
   sprintf(fname, "emf_%04d.txt", acq->shot_idx[iproc]);
   write_data(acq, emf, fname, emf->dcal_fd);
   

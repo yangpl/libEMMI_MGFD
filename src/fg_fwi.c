@@ -10,9 +10,7 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "fwi.h"
- 
- 
+#include "fwi.h" 
 
 acq_t *acq;
 emf_t *emf;
@@ -24,7 +22,7 @@ void write_data(acq_t *acq, emf_t *emf, char *fname, _Complex float ***dcal_fd);
 
 float cal_uncertainty_noise(acq_t *acq, emf_t *emf);
 
-void regrid_init(acq_t *acq, emf_t *emf, int ifreq);
+void regrid_init(acq_t *acq, emf_t *emf);
 void regrid_free(emf_t *emf);
 
 void gmg_init(emf_t *emf, int ifreq);
@@ -182,11 +180,11 @@ float fg_fwi(float *xx, float *g)
   emf->E1 = E1f;
   emf->E2 = E2f;
   emf->E3 = E3f;
+  regrid_init(acq, emf);
   for(ifreq=0; ifreq<emf->nfreq; ifreq++){
-    regrid_init(acq, emf, ifreq);
     gmg_init(emf, ifreq);
 
-    n = 3*emf->n123pad;
+    n = 3*(emf->n1+1)*(emf->n2+1)*(emf->n3+1);
     x = alloc1complex(n);//vector E=(Ex,Ey,Ez)^T
     b = alloc1complex(n);//vector Js=(Jx,Jy,Jz)^T
     inject_source(acq, emf, b, ifreq);//initialize b=i*omega*mu*Js
@@ -201,8 +199,8 @@ float fg_fwi(float *xx, float *g)
     free1complex(b);
     
     gmg_free();
-    regrid_free(emf);
   }
+  regrid_free(emf);
   sprintf(fname, "syn_%04d.txt", acq->shot_idx[iproc]);
   write_data(acq, emf, fname, emf->dcal_fd);
   
@@ -239,11 +237,11 @@ float fg_fwi(float *xx, float *g)
   emf->E1 = E1a;
   emf->E2 = E2a;
   emf->E3 = E3a;
+  regrid_init(acq, emf);
   for(ifreq=0; ifreq<emf->nfreq; ifreq++){
-    regrid_init(acq, emf, ifreq);
     gmg_init(emf, ifreq);
 
-    n = 3*emf->n123pad;
+    n = 3*(emf->n1+1)*(emf->n2+1)*(emf->n3+1);
     x = alloc1complex(n);//vector E=(Ex,Ey,Ez)^T
     b = alloc1complex(n);//vector Js=(Jx,Jy,Jz)^T, Js=data residual
     inject_adj_source(acq, emf, x, b, ifreq);//initialize b=i*omega*mu*Js,
@@ -258,8 +256,8 @@ float fg_fwi(float *xx, float *g)
     free1complex(b);
     
     gmg_free();
-    regrid_free(emf);
   }
+  regrid_free(emf);
 
   if(emf->verb) printf("----------step 4: compute gradient --------------\n");
   build_gradient(acq, emf, fwi, E1f, E2f, E3f, E1a, E2a, E3a);

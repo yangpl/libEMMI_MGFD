@@ -10,13 +10,13 @@
 #include <math.h>
 
 /*< create nonuniform grid using fixed point iteration >*/
-float create_nugrid(int n, float len, float dx, float *x, int istretch)
+float create_nugrid(int n, float len, float dx, float *x)
 {
   int i;
   float q, qq;
   float eps = 1e-15;
 
-  if(n*dx>=len||!istretch) {
+  if(n*dx>=len) {
     for(i=0; i<=n; i++) x[i] = i*dx;
     return 1;
   }

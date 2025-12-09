@@ -8,7 +8,6 @@
  *-----------------------------------------------------------------------*/
 #include "cstd.h"
 #include "emf.h"
- 
 
 int find_good_size(int n);
 int cmpfunc(const void *a, const void *b) { return ( *(int*)a - *(int*)b ); }
@@ -18,7 +17,8 @@ void emf_init(emf_t *emf)
   int ifreq, ic, istat;
   FILE *fp;
   char *frho11, *frho22, *frho33;
-  
+
+  if(iproc==0) printf("---------- emf_init -----------\n");
   if(!(emf->nfreq=countparval("freqs"))) err("Need freqs= vector");
   emf->freqs = alloc1float(emf->nfreq);
   emf->omegas = alloc1float(emf->nfreq);
@@ -56,6 +56,7 @@ void emf_init(emf_t *emf)
     for(ic=0; ic<emf->nchrec; ++ic) printf(" %s", emf->chrec[ic]);
     printf("\n");
   }
+  if(!getparint("reciprocity", &emf->reciprocity)) emf->reciprocity = 0;
   //dimensions and grid spacing over densely sampled uniform grid
   if(!getparint("nx", &emf->nx)) err("Need nx= ");
   if(!getparint("ny", &emf->ny)) err("Need ny= "); 
@@ -66,11 +67,18 @@ void emf_init(emf_t *emf)
   if(!getparfloat("ox", &emf->ox)) err("Need ox= ");
   if(!getparfloat("oy", &emf->oy)) err("Need oy= ");
   if(!getparfloat("oz", &emf->oz)) emf->oz = 0;//default, seafloor depth=0 m
-  if(!getparint("reciprocity", &emf->reciprocity)) emf->reciprocity = 0;
+  if(!getparfloat("d1min", &emf->d1min)) emf->d1min = 100;
+  if(!getparfloat("d2min", &emf->d2min)) emf->d2min = 100;
+  if(!getparfloat("d3min", &emf->d3min)) emf->d3min = 20;
+  if(!getparint("n1", &emf->n1)) emf->n1 = 128;//make sure it is good for multigrid
+  if(!getparint("n2", &emf->n2)) emf->n2 = 128;//make sure it is good for multigrid
+  if(!getparint("n3", &emf->n3)) emf->n3 = 128;//make sure it is good for multigrid
   if(emf->verb) {
     printf("[nx, ny, nz]=[%d, %d, %d]\n", emf->nx, emf->ny, emf->nz);
     printf("[dx, dy, dz]=[%g, %g, %g]\n", emf->dx, emf->dy, emf->dz);
     printf("[ox, oy, oz]=[%g, %g, %g]\n", emf->ox, emf->oy, emf->oz);
+    printf("[d1min, d2min, d3min]=[%g, %g, %g]\n", emf->d1min, emf->d2min, emf->d3min);
+    printf("GMG grid size: [n1, n2, n3]=[%d, %d, %d]\n", emf->n1, emf->n2, emf->n3);
   }
  
   //resistivities 
@@ -88,49 +96,45 @@ void emf_init(emf_t *emf)
   if(istat != emf->nx*emf->ny*emf->nz) 
     err("size not match frho11: file=%d nx*ny*nz=%d\n", istat, emf->nx*emf->ny*emf->nz);
   fclose(fp);
+
   fp = fopen(frho22, "rb");
   if(fp==NULL) err("cannot open file frho22=%s\n", frho22);
   istat = fread(&emf->rho22[0][0][0], sizeof(float), emf->nx*emf->ny*emf->nz, fp);
   if(istat != emf->nx*emf->ny*emf->nz) 
     err("size not match frho22: file=%d nx*ny*nz=%d\n", istat, emf->nx*emf->ny*emf->nz);
   fclose(fp);
+
   fp = fopen(frho33, "rb");
   if(fp==NULL) err("cannot open file frho33=%s\n", frho33);
   istat = fread(&emf->rho33[0][0][0], sizeof(float), emf->nx*emf->ny*emf->nz, fp);
   if(istat != emf->nx*emf->ny*emf->nz) 
     err("size not match frho33: file=%d nx*ny*nz=%d\n", istat, emf->nx*emf->ny*emf->nz);
   fclose(fp);
-  emf->rho_water = emf->rho11[0][0][0];//resistivity in the water
-  
-  if(!getparint("addair", &emf->addair)) emf->addair = 1;//add air layers on top of sea surface
+ 
+  if(!getparfloat("lextend", &emf->lextend)) emf->lextend = 50e3;//extend 50 km on each side
   if(!getparfloat("rho_air", &emf->rho_air)) emf->rho_air = 1e8;
-  if(!getparint("nb_air", &emf->nb_air)) emf->nb_air = 10;//nb layers on top of sea for air
-  if(!getparint("istretch", &emf->istretch)) emf->istretch = 1;//1=grid stretching; 0=no grid stretching
-  if(!emf->istretch){//uniform grid without grid stretching
-    emf->n1 = emf->nx;
-    emf->n2 = emf->ny;
-    emf->n3 = emf->nz;
-  }else{//power-law grid stretching
-    if(!getparfloat("d1min", &emf->d1min)) emf->d1min = 50;
-    if(!getparfloat("d2min", &emf->d2min)) emf->d2min = 50;
-    if(!getparfloat("d3min", &emf->d3min)) emf->d3min = 20;
-    //at least n1,n2,n3 points for GMG modelling, n1,n2,n3 will be adapted for a good size later on
-    if(!getparint("n1", &emf->n1)) emf->n1 = 100;
-    if(!getparint("n2", &emf->n2)) emf->n2 = 100;
-    if(!getparint("n3", &emf->n3)) emf->n3 = 100;
-    if(emf->verb) printf("[d1min, d2min, d3min]=[%g, %g, %g]\n", emf->d1min, emf->d2min, emf->d3min);
+  if(!getparint("nb", &emf->nb)) emf->nb = 10;//nb layers on top of sea for air
+  int i1, i2, i3;
+  float vmax = emf->rho11[0][0][0];
+  float vmin = emf->rho11[0][0][0];
+  for(i3=0; i3<emf->nz; i3++){
+    for(i2=0; i2<emf->ny; i2++){
+      for(i1=0; i1<emf->nx; i1++){
+	vmax = MAX(vmax, emf->rho11[i3][i2][i1]);
+	vmin = MIN(vmin, emf->rho11[i3][i2][i1]);
+	vmax = MAX(vmax, emf->rho22[i3][i2][i1]);
+	vmin = MIN(vmin, emf->rho22[i3][i2][i1]);
+ 	vmax = MAX(vmax, emf->rho33[i3][i2][i1]);
+	vmin = MIN(vmin, emf->rho33[i3][i2][i1]);
+      }
+    }
   }
-  emf->n1 = find_good_size(emf->n1+2*emf->nb_air);
-  emf->n2 = find_good_size(emf->n2+2*emf->nb_air);
-  emf->n3 = find_good_size(emf->n3+2*emf->nb_air);
-  emf->n1pad = emf->n1 + 1;
-  emf->n2pad = emf->n2 + 1;
-  emf->n3pad = emf->n3 + 1;
-  emf->n123pad = emf->n1pad*emf->n2pad*emf->n3pad;
-  if(emf->verb) {    
-    printf("istrech=%d \n", emf->istretch);
-    printf("addair=%d, nb_air=%d, rho_air=%g Ohm*m \n", emf->addair, emf->nb_air, emf->rho_air);
-    printf("GMG grid size: [n1pad, n2pad, n3pad]=[%d, %d, %d]\n", emf->n1pad, emf->n2pad, emf->n3pad);
+  emf->rho_water = vmin;
+  if(emf->verb){
+    printf("input model [rhomin, rhomax]=[%g, %g]\n", vmin, vmax);
+    printf("rho_air=%e\n", emf->rho_air);
+    printf("rho_water=%g\n", emf->rho_water);
+    printf("extended distance on each side: lextend=%g\n", emf->lextend);
   }
 
 }

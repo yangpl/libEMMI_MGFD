@@ -23,15 +23,17 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   float w1, w2, w3, vol, phi, theta;
   complex src_vol, src_fd, Fx, Fy, Fz;
 
+  int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
+
 #undef id1
 #undef id2
 #undef id3
-#define id1(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k))
-#define id2(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + emf->n123pad)
-#define id3(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + 2*emf->n123pad)
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   src_fd = 1;
-  memset(b, 0, 3*emf->n123pad*sizeof(complex));
+  memset(b, 0, 3*n123*sizeof(complex));
   for(isrc=0; isrc<acq->nsrc; isrc++){
     phi = acq->src_azimuth[isrc];
     theta = acq->src_dip[isrc];
@@ -54,9 +56,9 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
     }
 
     //Jx(i+0.5,j,k)
-    i = find_index(emf->n1pad, emf->x1s, acq->src_x1[isrc]);
-    j = find_index(emf->n2pad, emf->x2, acq->src_x2[isrc]);
-    k = find_index(emf->n3pad, emf->x3, acq->src_x3[isrc]);
+    i = find_index((emf->n1+1), emf->x1s, acq->src_x1[isrc]);
+    j = find_index((emf->n2+1), emf->x2, acq->src_x2[isrc]);
+    k = find_index((emf->n3+1), emf->x3, acq->src_x3[isrc]);
 
     w1 = (acq->src_x1[isrc] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->src_x2[isrc] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -75,9 +77,9 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
 
 
     //Jy(i,j+0.5,k)
-    i = find_index(emf->n1pad, emf->x1, acq->src_x1[isrc]);
-    j = find_index(emf->n2pad, emf->x2s, acq->src_x2[isrc]);
-    k = find_index(emf->n3pad, emf->x3, acq->src_x3[isrc]);
+    i = find_index((emf->n1+1), emf->x1, acq->src_x1[isrc]);
+    j = find_index((emf->n2+1), emf->x2s, acq->src_x2[isrc]);
+    k = find_index((emf->n3+1), emf->x3, acq->src_x3[isrc]);
 
     w1 = (acq->src_x1[isrc] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->src_x2[isrc] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -95,9 +97,9 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
     b[id2(i+1,j+1,k+1)] += src_vol*w1*w2*w3;
 
     //Jz(i,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1, acq->src_x1[isrc]);
-    j = find_index(emf->n2pad, emf->x2, acq->src_x2[isrc]);
-    k = find_index(emf->n3pad, emf->x3s, acq->src_x3[isrc]);
+    i = find_index((emf->n1+1), emf->x1, acq->src_x1[isrc]);
+    j = find_index((emf->n2+1), emf->x2, acq->src_x2[isrc]);
+    k = find_index((emf->n3+1), emf->x3s, acq->src_x3[isrc]);
 
     w1 = (acq->src_x1[isrc] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->src_x2[isrc] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -128,16 +130,17 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
   int ic, irec, i, j, k;
   float w1, w2, w3, vol, phi, theta;
   complex rec_vol, Fx, Fy, Fz;
+  int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
 
 #undef id1
 #undef id2
 #undef id3
-#define id1(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k))
-#define id2(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + emf->n123pad)
-#define id3(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + 2*emf->n123pad)
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
-  memset(b, 0, 3*emf->n123pad*sizeof(complex));
-  memset(x, 0, 3*emf->n123pad*sizeof(complex));
+  memset(b, 0, 3*n123*sizeof(complex));
+  memset(x, 0, 3*n123*sizeof(complex));
   for(irec=0; irec<acq->nrec; irec++){
     phi = acq->rec_azimuth[irec];
     theta = acq->rec_dip[irec];
@@ -161,9 +164,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     }
     
     //Jx(i+0.5,j,k)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -183,9 +186,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
 
 
     //Jy(i,j+0.5,k)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -205,9 +208,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
 
 
     //Jz(i,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -245,9 +248,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     }
     
     //Mx(i,j+0.5,k+0.5)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -267,9 +270,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
 
 
     //My(i+0.5,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -289,9 +292,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
 
 
     //Mz(i,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -309,9 +312,9 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     x[id3(i,j+1,k+1)] += rec_vol*(1.-w1)*w2*w3;
     x[id3(i+1,j+1,k+1)] += rec_vol*w1*w2*w3;  
   }
-  for(k=1; k<emf->n3pad; k++){
-    for(j=1; j<emf->n2pad; j++){
-      for(i=1; i<emf->n1pad; i++){
+  for(k=1; k<(emf->n3+1); k++){
+    for(j=1; j<(emf->n2+1); j++){
+      for(i=1; i<(emf->n1+1); i++){
 	//here we assume mur=1
 	b[id1(i,j,k)] += (x[id3(i,j,k)]-x[id3(i,j-1,k)])/emf->d2[j] - (x[id2(i,j,k)]-x[id2(i,j,k-1)])/emf->d3[k];
 	b[id2(i,j,k)] += (x[id1(i,j,k)]-x[id1(i,j,k-1)])/emf->d3[k] - (x[id3(i,j,k)]-x[id3(i-1,j,k)])/emf->d1[i];
@@ -331,13 +334,14 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
   int i, j, k, ic, irec;
   float w1, w2, w3, phi, theta;
   complex Fx, Fy, Fz;
+  int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
 
 #undef id1
 #undef id2
 #undef id3
-#define id1(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k))
-#define id2(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + emf->n123pad)
-#define id3(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + 2*emf->n123pad)
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   for(irec=0; irec<acq->nrec; irec++){
     phi = acq->rec_azimuth[irec];
@@ -345,9 +349,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
 
     //=======================================================
     //Ex(i+0.5,j,k)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -364,9 +368,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
     Fx += x[id1(i+1,j+1,k+1)]*w1*w2*w3;
 
     //Ey(i,j+0.5,k)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -383,9 +387,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
     Fy += x[id2(i+1,j+1,k+1)]*w1*w2*w3;
 
     //Ez(i,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -418,9 +422,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
 
     //=======================================================
     //Hx(i,j+0.5,k+0.5)
-    i = find_index(emf->n1pad, emf->x1, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1[i])/(emf->x1[i+1]- emf->x1[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -437,9 +441,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
     Fx += b[id1(i+1,j+1,k+1)]*w1*w2*w3;
 
     //Hy(i+0.5,j,k+0.5)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3s, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3s, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2[j])/(emf->x2[j+1]- emf->x2[j]);
@@ -456,9 +460,9 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
     Fy += b[id2(i+1,j+1,k+1)]*w1*w2*w3;
 
     //Hz(i+0.5,j+0.5,k)
-    i = find_index(emf->n1pad, emf->x1s, acq->rec_x1[irec]);
-    j = find_index(emf->n2pad, emf->x2s, acq->rec_x2[irec]);
-    k = find_index(emf->n3pad, emf->x3, acq->rec_x3[irec]);
+    i = find_index((emf->n1+1), emf->x1s, acq->rec_x1[irec]);
+    j = find_index((emf->n2+1), emf->x2s, acq->rec_x2[irec]);
+    k = find_index((emf->n3+1), emf->x3, acq->rec_x3[irec]);
 
     w1 = (acq->rec_x1[irec] - emf->x1s[i])/(emf->x1s[i+1]- emf->x1s[i]);
     w2 = (acq->rec_x2[irec] - emf->x2s[j])/(emf->x2s[j+1]- emf->x2s[j]);
@@ -507,13 +511,14 @@ void extract_electric_field(acq_t *acq, emf_t *emf, complex *x, int ifreq)
   complex s;
   float sigma;
   int ii, jj, kk;
+  int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
 
 #undef id1
 #undef id2
 #undef id3
-#define id1(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k))
-#define id2(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + emf->n123pad)
-#define id3(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + 2*emf->n123pad)
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   w1 = alloc1float(emf->nx);
   w2 = alloc1float(emf->ny);
@@ -531,33 +536,33 @@ void extract_electric_field(acq_t *acq, emf_t *emf, complex *x, int ifreq)
   for(i=0; i<emf->nx; i++){
     x1 = emf->ox + (i+0.5)*emf->dx;
     
-    ii = find_index(emf->n1pad, emf->x1, x1);
+    ii = find_index((emf->n1+1), emf->x1, x1);
     w1[i] = (x1 - emf->x1[ii])/(emf->x1[ii+1]- emf->x1[ii]);
     i1[i] = ii;
 
-    ii = find_index(emf->n1pad, emf->x1s, x1);
+    ii = find_index((emf->n1+1), emf->x1s, x1);
     w1s[i] = (x1 - emf->x1s[ii])/(emf->x1s[ii+1]- emf->x1s[ii]);
     i1s[i] = ii;
   }
   for(j=0; j<emf->ny; j++){
     x2 = emf->oy + (j+0.5)*emf->dy;
 
-    jj = find_index(emf->n2pad, emf->x2, x2);
+    jj = find_index((emf->n2+1), emf->x2, x2);
     w2[j] = (x2 - emf->x2[jj])/(emf->x2[jj+1]- emf->x2[jj]);
     i2[j] = jj;
 
-    jj = find_index(emf->n2pad, emf->x2s, x2);
+    jj = find_index((emf->n2+1), emf->x2s, x2);
     w2s[j] = (x2 - emf->x2s[jj])/(emf->x2s[jj+1]- emf->x2s[jj]);
     i2s[j] = jj;
   }
   for(k=0; k<emf->nz; k++){
     x3 = emf->oz + (k+0.5)*emf->dz;
     
-    kk = find_index(emf->n3pad, emf->x3, x3);
+    kk = find_index((emf->n3+1), emf->x3, x3);
     w3[k] = (x3 - emf->x3[kk])/(emf->x3[kk+1]- emf->x3[kk]);
     i3[k] = kk;
 
-    kk = find_index(emf->n3pad, emf->x3s, x3);
+    kk = find_index((emf->n3+1), emf->x3s, x3);
     w3s[k] = (x3 - emf->x3s[kk])/(emf->x3s[kk+1]- emf->x3s[kk]);
     i3s[k] = kk;
   }
@@ -676,13 +681,14 @@ void extract_magnetic_field(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   float wx, wy, wz;
   complex s;
   int ii, jj, kk;
+  int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
 
 #undef id1
 #undef id2
 #undef id3
-#define id1(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k))
-#define id2(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + emf->n123pad)
-#define id3(i,j,k)  (i+emf->n1pad*(j + emf->n2pad*k) + 2*emf->n123pad)
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   w1 = alloc1float(emf->nx);
   w2 = alloc1float(emf->ny);
@@ -700,33 +706,33 @@ void extract_magnetic_field(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   for(i=0; i<emf->nx; i++){
     x1 = emf->ox + (i+0.5)*emf->dx;
     
-    ii = find_index(emf->n1pad, emf->x1, x1);
+    ii = find_index((emf->n1+1), emf->x1, x1);
     w1[i] = (x1 - emf->x1[ii])/(emf->x1[ii+1]- emf->x1[ii]);
     i1[i] = ii;
 
-    ii = find_index(emf->n1pad, emf->x1s, x1);
+    ii = find_index((emf->n1+1), emf->x1s, x1);
     w1s[i] = (x1 - emf->x1s[ii])/(emf->x1s[ii+1]- emf->x1s[ii]);
     i1s[i] = ii;
   }
   for(j=0; j<emf->ny; j++){
     x2 = emf->oy + (j+0.5)*emf->dy;
 
-    jj = find_index(emf->n2pad, emf->x2, x2);
+    jj = find_index((emf->n2+1), emf->x2, x2);
     w2[j] = (x2 - emf->x2[jj])/(emf->x2[jj+1]- emf->x2[jj]);
     i2[j] = jj;
 
-    jj = find_index(emf->n2pad, emf->x2s, x2);
+    jj = find_index((emf->n2+1), emf->x2s, x2);
     w2s[j] = (x2 - emf->x2s[jj])/(emf->x2s[jj+1]- emf->x2s[jj]);
     i2s[j] = jj;
   }
   for(k=0; k<emf->nz; k++){
     x3 = emf->oz + (k+0.5)*emf->dz;
     
-    kk = find_index(emf->n3pad, emf->x3, x3);
+    kk = find_index((emf->n3+1), emf->x3, x3);
     w3[k] = (x3 - emf->x3[kk])/(emf->x3[kk+1]- emf->x3[kk]);
     i3[k] = kk;
 
-    kk = find_index(emf->n3pad, emf->x3s, x3);
+    kk = find_index((emf->n3+1), emf->x3s, x3);
     w3s[k] = (x3 - emf->x3s[kk])/(emf->x3s[kk+1]- emf->x3s[kk]);
     i3s[k] = kk;
   }

@@ -8,7 +8,6 @@
  *-----------------------------------------------------------------------*/
 #include "cstd.h"
 #include "emf.h"
- 
 
 int verb;
 int cycleopt;//1=v cycle; 2=f cycle; 3=w cycle
@@ -19,7 +18,7 @@ int v2;//number of post-smoothing
 int lmax;//maximum number of levels for switching between fine and coarse grid
 double tol;//tolerance for convergence
 double rnorm0, rnorm;//norm of residual vector r
-double omega;//frequency omega=2*PI*freqx
+complex I_omega_mu0;//frequency omega=2*PI*freqx
 emf_t *emf_;
 
 typedef struct{
@@ -188,9 +187,9 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][im1];
+	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][im1];
 	b[0] = bx[k][j][im1] - Ax;
-	A[0][0] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coeffient for Ex(I-1,j,k)
+	A[0][0] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coeffient for Ex(I-1,j,k)
 	A[0][1] = 0;//coefficient for Ex(I,j,k)
 	A[0][2] = -m2/(d1s[im1]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	A[0][3] = m1/(d1s[im1]*d2s[j]);//coefficient for Ey(i,J,k)
@@ -210,10 +209,10 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][i];
+	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][i];
 	b[1] = bx[k][j][i] - Ax;
 	A[1][0] = 0;//coeffient for Ex(I-1,j,k)
-	A[1][1] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coefficient for Ex(I,j,k)
+	A[1][1] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coefficient for Ex(I,j,k)
 	A[1][2] = m2/(d1s[i]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	A[1][3] = -m1/(d1s[i]*d2s[j]);//coefficient for Ey(i,J,k)
 	A[1][4] = m4/(d1s[i]*d3s[km1]);//coefficient for Ez(i,j,K-1)
@@ -233,11 +232,11 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][jm1][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][jm1][i];
 	b[2] = by[k][jm1][i] - Ax;
 	A[2][0] = -m4/(d2s[jm1]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	A[2][1] = m3/(d2s[jm1]*d1s[i]);//coefficient for Ex(I,j,k)
-	A[2][2] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J-1,k)
+	A[2][2] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J-1,k)
 	A[2][3] = 0;//coefficient for Ey(i,J,k)
 	A[2][4] = -m2/(d2s[jm1]*d3s[km1]);//coefficient for Ez(i,j,K-1)
 	A[2][5] = m1/(d2s[jm1]*d3s[k]);//coefficient for Ez(i,j,K)
@@ -255,12 +254,12 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][j][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][j][i];
 	b[3] = by[k][j][i] - Ax;
 	A[3][0] = m4/(d2s[j]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	A[3][1] = -m3/(d2s[j]*d1s[i]);//coefficient for Ex(I,j,k)
 	A[3][2] = 0;//coefficient for Ey(i,J-1,k)
-	A[3][3] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J,k)
+	A[3][3] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J,k)
 	A[3][4] = m2/(d2s[j]*d3s[km1]);//coefficient for Ez(i,j,K-1)
 	A[3][5] = -m1/(d2s[j]*d3s[k]);//coefficient for Ez(i,j,K)
 	
@@ -278,13 +277,13 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[km1][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[km1][j][i];
 	b[4] = bz[km1][j][i] - Ax;
 	A[4][0] = -m2/(d3s[km1]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	A[4][1] = m1/(d3s[km1]*d1s[i]);//coefficient for Ex(I,j,k)
 	A[4][2] = -m4/(d3s[km1]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	A[4][3] = m3/(d3s[km1]*d2s[j]);//coefficient for Ey(i,J,k)
-	A[4][4] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K-1)
+	A[4][4] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K-1)
 	A[4][5] = 0;//coefficient for Ez(i,j,K)
 	//Ez(i,j,K)
 	sigma33_ = 0.25*(sigma33[k][j][i] + sigma33[k][j][im1] + sigma33[k][jm1][i] + sigma33[k][jm1][im1]);
@@ -300,14 +299,14 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[k][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[k][j][i];
 	b[5] = bz[k][j][i] - Ax;
 	A[5][0] = m2/(d3s[k]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	A[5][1] = -m1/(d3s[k]*d1s[i]);//coefficient for Ex(I,j,k)
 	A[5][2] = m4/(d3s[k]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	A[5][3] = -m3/(d3s[k]*d2s[j]);//coefficient for Ey(i,J,k)
 	A[5][4] = 0;//coefficient for Ez(i,j,K-1)
-	A[5][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K)
+	A[5][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K)
 		
 	//solve Ax=b, A is 6*6, solution stored in b[]
 	lu_solve(&A[0][0], b, 6);
@@ -412,10 +411,10 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][im1];
+	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][im1];
 	b[ii] = bx[k][j][im1] - Ax;
 	//jj = col_ind;
-	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coeffient for Ex(I-1,j,k)
+	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coeffient for Ex(I-1,j,k)
 	//jj = col_ind+1;
 	A[ii][6] = -m2/(d1s[im1]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+2;
@@ -442,7 +441,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][jm1][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][jm1][i];
 	b[ii] = by[k][jm1][i] - Ax;
 	//jj = col_ind-4;
 	A[ii][0] = (i>1)?(-m4/(d1s[im1]*d1s[im1])):0.;//coefficient for Ey(i-1,J-1,k)
@@ -455,7 +454,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind;
 	A[ii][4] = -m4/(d2s[jm1]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	//jj = col_ind+1;
-	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J-1,k)
+	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+2;
 	A[ii][6] = 0;//coefficient for Ey(i,J,k)
 	//jj = col_ind+3;
@@ -482,7 +481,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][j][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][j][i];
 	b[ii] = by[k][j][i] - Ax;
 	//jj = col_ind-3;
 	A[ii][0] = (i>1)? (-m4/(d1s[im1]*d1s[im1])):0.;//coefficient for Ey(i-1,J,k)
@@ -495,7 +494,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+1;
 	A[ii][4] = 0;//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+2;
-	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J,k)
+	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J,k)
 	//jj = col_ind+3;
 	A[ii][6] = m2/(d2s[j]*d3s[km1]);//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
@@ -522,7 +521,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[km1][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[km1][j][i];
 	b[ii] = bz[km1][j][i] - Ax;
 	//jj = col_ind-2;
 	A[ii][0] = (i>1)?(-m2/(d1s[im1]*d1s[im1])):0.;//coefficient for Ez(i-1,j,K-1)
@@ -535,7 +534,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+2;
 	A[ii][4] = m3/(d3s[km1]*d2s[j]);//coefficient for Ey(i,J,k)
 	//jj = col_ind+3;
-	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K-1)
+	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
 	A[ii][6] = 0;//coefficient for Ez(i,j,K)
 	//jj = col_ind+5;
@@ -562,7 +561,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[k][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[k][j][i];
 	b[ii] = bz[k][j][i] - Ax;
 	//jj = col_ind-1;
 	A[ii][0] = (i>1)?(-m2/(d1s[im1]*d1s[im1])):0.;//coefficient for Ez(i-1,j,K)
@@ -575,7 +574,7 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+3;
 	A[ii][4] = 0;//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
-	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K)
+	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K)
 	//jj = col_ind+5;
 	A[ii][6] = -m1/(d3s[k]*d1s[i]);//coefficient for Ex(I,j,k)
 	//jj = col_ind+6;
@@ -613,11 +612,11 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
 	  t2 *= m2;
 	  t3 *= m3;
 	  t4 *= m4;
-	  Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][i];
+	  Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][i];
 	  b[ii] = bx[k][j][i] - Ax;
 
 	  //jj = col_ind+5;
-	  A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coefficient for Ex(I,j,k)
+	  A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coefficient for Ex(I,j,k)
 	}
       }//end for i
       ilu0_solve(&A[0][0], b, nr);
@@ -724,10 +723,10 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][jm1][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][jm1][i];
 	b[ii] = by[k][jm1][i] - Ax;
 	//jj = col_ind;
-	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J-1,k)
+	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+1;
 	A[ii][6] = -m4/(d2s[jm1]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	//jj = col_ind+2;
@@ -754,7 +753,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][im1];
+	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][im1];
 	b[ii] = bx[k][j][im1] - Ax;
 	//jj = col_ind-4;
 	A[ii][0] = (j>1)?-m2/(d2s[jm1]*d2s[jm1]):0.;//coefficient for Ex(I-1,j-1,k)
@@ -767,7 +766,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind;
 	A[ii][4] = -m2/(d1s[im1]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+1;
-	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coeffient for Ex(I-1,j,k)
+	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coeffient for Ex(I-1,j,k)
 	//jj = col_ind+2;
 	A[ii][6] = 0;//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
@@ -794,7 +793,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][i];
+	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][i];
 	b[ii] = bx[k][j][i] - Ax;
 	//jj = col_ind-3;
 	A[ii][0] = (j>1)?-m2/(d2s[jm1]*d2s[jm1]):0;//coefficient for Ex(I,j-1,k)
@@ -807,7 +806,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+1;
 	A[ii][4] = 0;//coeffient for Ex(I-1,j,k)
 	//jj = col_ind+2;
-	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coefficient for Ex(I,j,k)
+	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
 	A[ii][6] = m4/(d1s[i]*d3s[km1]);//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
@@ -834,7 +833,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[km1][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[km1][j][i];
 	b[ii] = bz[km1][j][i] - Ax;
 	//jj = col_ind-2;
 	A[ii][0] = (j>1)?-m4/(d2s[jm1]*d2s[jm1]):0;//coefficient for Ez(i,j-1,K-1)
@@ -847,7 +846,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+2;
 	A[ii][4] = m1/(d3s[km1]*d1s[i]);//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
-	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K-1)
+	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
 	A[ii][6] = 0;//coefficient for Ez(i,j,K)
 	//jj = col_ind+5;
@@ -874,7 +873,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[k][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[k][j][i];
 	b[ii] = bz[k][j][i] - Ax;
 	//jj = col_ind-1;
 	A[ii][0] = (j>1)?-m4/(d2s[jm1]*d2s[jm1]):0.;//coefficient for Ez(i,j-1,K)
@@ -887,7 +886,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+3;
 	A[ii][4] = 0;//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+4;
-	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K)
+	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K)
 	//jj = col_ind+5;
 	A[ii][6] = -m3/(d3s[k]*d2s[j]);//coefficient for Ey(i,J,k)
 	//jj = col_ind+6;
@@ -925,11 +924,11 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 	  t2 *= m2;
 	  t3 *= m3;
 	  t4 *= m4;
-	  Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][j][i];
+	  Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][j][i];
 	  b[ii] = by[k][j][i] - Ax;
 
 	  //jj = col_ind+5;
-	  A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J,k)
+	  A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J,k)
 	}
       }
       ilu0_solve(&A[0][0], b, nr);
@@ -1038,10 +1037,10 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[km1][j][i];
+	Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[km1][j][i];
 	b[ii] = bz[km1][j][i] - Ax;
 	//jj = col_ind;
-	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K-1)
+	A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+1;
 	A[ii][6] = -m2/(d3s[km1]*d1s[im1]);//coefficient for Ex(I-1,j,k)
 	//jj = col_ind+2;
@@ -1068,7 +1067,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][im1];
+	Ax =  ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][im1];
 	b[ii] = bx[k][j][im1] - Ax;
 	//jj = col_ind-4;
 	A[ii][0] = (k>1)?-m4/(d3s[km1]*d3s[km1]):0.;//coeffient for Ex(I-1,j,k-1)
@@ -1081,7 +1080,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind;
 	A[ii][4] = -m4/(d1s[im1]*d3s[km1]);//coefficient for Ez(i,j,K-1)
 	//jj = col_ind+1;
-	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coeffient for Ex(I-1,j,k)
+	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coeffient for Ex(I-1,j,k)
 	//jj = col_ind+2;
 	A[ii][6] = 0;//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
@@ -1108,7 +1107,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][i];
+	Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][i];
 	b[ii] = bx[k][j][i] - Ax;
 	//jj = col_ind-3;
 	A[ii][0] = (k>1)?-m4/(d3s[km1]*d3s[km1]):0;//coeffient for Ex(I,j,k-1)
@@ -1121,7 +1120,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+1;
 	A[ii][4] = 0;//coeffient for Ex(I-1,j,k)
 	//jj = col_ind+2;
-	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I*omega*mu0*sigma11_;//coefficient for Ex(I,j,k)
+	A[ii][5] = (m1/(d2s[j]*d2s[j]) + m2/(d2s[jm1]*d2s[jm1])) + (m3/(d3s[k]*d3s[k]) + m4/(d3s[km1]*d3s[km1])) - I_omega_mu0*sigma11_;//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
 	A[ii][6] = m2/(d1s[i]*d2s[jm1]);//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+4;
@@ -1148,7 +1147,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][jm1][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][jm1][i];
 	b[ii] = by[k][jm1][i] - Ax;
 	//jj = col_ind-2;
 	A[ii][0] = (k>1)?-m2/(d3s[km1]*d3s[km1]):0;//coeffient for Ey(i,J-1,k-1)
@@ -1161,7 +1160,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+2;
 	A[ii][4] = m3/(d2s[jm1]*d1s[i]);//coefficient for Ex(I,j,k)
 	//jj = col_ind+3;
-	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J-1,k)
+	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+4;
 	A[ii][6] = 0;//coefficient for Ey(i,J,k)
 	//jj = col_ind+5;
@@ -1188,7 +1187,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	t2 *= m2;
 	t3 *= m3;
 	t4 *= m4;
-	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][j][i];
+	Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][j][i];
 	b[ii] = by[k][j][i] - Ax;
 	//jj = col_ind-1;
 	A[ii][0] = (k>1)?-m2/(d3s[km1]*d3s[km1]):0;//coeffient for Ey(i,J,k-1)
@@ -1201,7 +1200,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	//jj = col_ind+3;
 	A[ii][4] = 0;//coefficient for Ey(i,J-1,k)
 	//jj = col_ind+4;
-	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I*omega*mu0*sigma22_;//coefficient for Ey(i,J,k)
+	A[ii][5] = (m1/(d3s[k]*d3s[k]) + m2/(d3s[km1]*d3s[km1])) + (m3/(d1s[i]*d1s[i]) + m4/(d1s[im1]*d1s[im1])) - I_omega_mu0*sigma22_;//coefficient for Ey(i,J,k)
 	//jj = col_ind+5;
 	A[ii][6] = -m1/(d2s[j]*d3s[k]);//coefficient for Ez(i,j,K)
 	//jj = col_ind+6;
@@ -1239,11 +1238,11 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 	  t2 *= m2;
 	  t3 *= m3;
 	  t4 *= m4;
-	  Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[k][j][i];
+	  Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[k][j][i];
 	  b[ii] = bz[k][j][i] - Ax;
 
 	  //jj = col_ind+5;
-	  A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I*omega*mu0*sigma33_;//coefficient for Ez(i,j,K)
+	  A[ii][5] = (m1/(d1s[i]*d1s[i]) + m2/(d1s[im1]*d1s[im1])) + (m3/(d2s[j]*d2s[j]) + m4/(d2s[jm1]*d2s[jm1])) - I_omega_mu0*sigma33_;//coefficient for Ez(i,j,K)
 	}
       }
       ilu0_solve(&A[0][0], b, nr);
@@ -1343,7 +1342,7 @@ void residual(gmg_t *gmg, int lev)
 	  t2 *= 0.5*(invmur[k][jm1][i] + invmur[km1][jm1][i]);//Hz(I,J-1,k)
 	  t3 *= 0.5*(invmur[k][j][i] + invmur[k][jm1][i]);//Hy(I,j,K)
 	  t4 *= 0.5*(invmur[km1][j][i] + invmur[km1][jm1][i]);//Hy(I,j,K-1)
-	  Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I*omega*mu0*sigma11_*Ex[k][j][i];
+	  Ax = ((t1/d2s[j]-t2/d2s[jm1]) - (t3/d3s[k]-t4/d3s[km1])) - I_omega_mu0*sigma11_*Ex[k][j][i];
 	  rx[k][j][i] -= Ax;
 	}
 
@@ -1357,7 +1356,7 @@ void residual(gmg_t *gmg, int lev)
 	  t2 *= 0.5*(invmur[km1][j][i] + invmur[km1][j][im1]);//Hx(i,J,K-1)
 	  t3 *= 0.5*(invmur[k][j][i] + invmur[km1][j][i]);//Hz(I,J,k)
 	  t4 *= 0.5*(invmur[k][j][im1] + invmur[km1][j][im1]);//Hz(I-1,J,k)
-	  Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I*omega*mu0*sigma22_*Ey[k][j][i];
+	  Ax = ((t1/d3s[k]-t2/d3s[km1]) - (t3/d1s[i]-t4/d1s[im1])) - I_omega_mu0*sigma22_*Ey[k][j][i];
 	  ry[k][j][i] -= Ax;
 	}
 
@@ -1371,7 +1370,7 @@ void residual(gmg_t *gmg, int lev)
 	  t2 *= 0.5*(invmur[k][j][im1] + invmur[k][jm1][im1]);//Hy(I-1,j,K)
 	  t3 *= 0.5*(invmur[k][j][i] + invmur[k][j][im1]);//Hx(i,J,K)
 	  t4 *= 0.5*(invmur[k][jm1][i] + invmur[k][jm1][im1]);//Hx(i,J-1,K)
-	  Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I*omega*mu0*sigma33_*Ez[k][j][i];
+	  Ax = ((t1/d1s[i]-t2/d1s[im1]) - (t3/d2s[j]-t4/d2s[jm1])) - I_omega_mu0*sigma33_*Ez[k][j][i];
 	  rz[k][j][i] -= Ax;
 	}
       }
@@ -1419,11 +1418,11 @@ void compute_H_from_E(gmg_t *gmg, int lev)
 
 	//here we assume mu=mu0, note invmur has been multiplied with cell volume
 	t1 = (Ez[k][jp1][i]-Ez[k][j][i])/d2s[j] - (Ey[kp1][j][i]-Ey[k][j][i])/d3s[k];//\partial_y Ez - \partial_z Ey
-	Hx[k][j][i] = t1/(I*omega*mu0);//Hx(i,J,K)
+	Hx[k][j][i] = t1/(I_omega_mu0);//Hx(i,J,K)
 	t2 = (Ex[kp1][j][i]-Ex[k][j][i])/d3s[k] - (Ez[k][j][ip1]-Ez[k][j][i])/d1s[i];//\partial_z Ex - \partial_x Ez
-	Hy[k][j][i] = t2/(I*omega*mu0);//Hy(I,j,K)
+	Hy[k][j][i] = t2/(I_omega_mu0);//Hy(I,j,K)
 	t3 = (Ey[k][j][ip1]-Ey[k][j][i])/d1s[i] - (Ex[k][jp1][i]-Ex[k][j][i])/d2s[j];//\partial_x Ey - \partial_y Ex
-	Hz[k][j][i] = t3/(I*omega*mu0);//Hz(I,J,k)
+	Hz[k][j][i] = t3/(I_omega_mu0);//Hz(I,J,k)
       }
     }
   }
@@ -1639,7 +1638,6 @@ void w_cycle(gmg_t *gmg, int lev)
 }
 
 
-
 /*< use x1[] to derive x1s[], d1[], d1s[] >*/
 void generate_xs_dx(int n1, double *x1, double *x1s, double *d1, double *d1s)
 {
@@ -1676,9 +1674,10 @@ void grid_init(gmg_t *gmg, int lev);
 void gmg_init(emf_t *emf, int ifreq)
 {
   int lmax1, lmax2, lmax3;
-  
+
+  if(emf->verb) printf("----------- gmg_init ---------------\n");
   emf_ = emf;
-  omega = emf->omegas[ifreq];
+  I_omega_mu0 = I*emf->omegas[ifreq]*mu0;
   verb = emf->verb; //verbosity display, 1=verbose, 0=not 
   if(!getparint("cycleopt", &cycleopt)) cycleopt = 2;/* 1=V cycle; 2=F cycle; 3=W cycle */
   if(!getparint("ncycle", &ncycle)) ncycle = 30;/* number of multigrid cycles */  
@@ -1693,7 +1692,6 @@ void gmg_init(emf_t *emf, int ifreq)
     lmax = MAX(MAX(lmax1, lmax2), lmax3);
   }
   if(verb) {
-    printf("------------------ GMG init -------------------\n");
     printf("cycleopt=%d (1=V cycle; 2=F cycle; 3=W cycle)\n", cycleopt);
     printf("number of V/F/W cycles, ncycle=%d\n", ncycle);
     printf("number of pre-smoothing, v1=%d\n", v1);

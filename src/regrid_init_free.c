@@ -11,9 +11,11 @@
 #include "acq.h"
 #include "emf.h"
  
-
-float create_nugrid(int n, float len, float dx, float *x, int istretch);
-void homogenization(emf_t *emf, float ***sigma_in, float ***sigma_out, int flag);
+int find_index(int n, float *x, float val);
+float create_nugrid(int n, float len, float dx, float *x);
+void homogenization(float ***in, float ***out,
+		    int nx, int ny, int nz, float *xx, float *yy, float *zz,
+		    int n1, int n2, int n3, float *x1, float *x2, float *x3);
 
 /*< generate staggered grid coordinate >*/
 void generate_staggered_xs_dx(int n1, float *x1, float *x1s, float *d1, float *d1s)
@@ -32,176 +34,181 @@ void generate_staggered_xs_dx(int n1, float *x1, float *x1s, float *d1, float *d
 }
 
 /*< compute effective medium by regridding over non-uniform grid >*/
-void regrid_init(acq_t *acq, emf_t *emf, int ifreq)
+void regrid_init(acq_t *acq, emf_t *emf)
 {
-  int i1, i2, i3, nz;
+  int i1, i2, i3;
   int j1, j2, j3;
-  float vmin, vmax, dist, dleft, dright, r;
-  float *x;
-  int nb1, nb2, nb3, nb, logcond;
-  float rhox, rhoy, rhoz, sigma;
-  float lx, ly, lz, lair;
-  
-  if(!getparfloat("rhox", &rhox)) rhox = 5;//parameter to extend boundary in x direction
-  if(!getparfloat("rhoy", &rhoy)) rhoy = 5;//parameter to extend boundary in y direction
-  if(!getparfloat("rhoz", &rhoz)) rhoz = 10;//parameter to extend boundary in z direction
-  if(!getparfloat("lair", &lair)) lair = 100000;//extend distance up to 100 km in air
-  if(!getparint("logcond", &logcond)) logcond = 0;//1=average over log(conductivity)
+  int i, j, k;
+  float r, dist, *x;
+  int nxpad, nypad, nzpad, np1, np2;
+  float ***sig11, ***sig22, ***rho33;
 
-  //extending distance=6*skin_depth, field becomes exp(-6.)=0.2%
-  sigma = 1./rhox;
-  lx = 6.*sqrt(2./(sigma*emf->omegas[ifreq]*mu0));
-  sigma = 1./rhoy;
-  ly = 6.*sqrt(2./(sigma*emf->omegas[ifreq]*mu0));
-  sigma = 1./rhoz;
-  lz = 6.*sqrt(2./(sigma*emf->omegas[ifreq]*mu0));
-  if(emf->verb) {
-    printf("---------------- emf init, freq=%g Hz ----------------\n", emf->freqs[ifreq]);
-    printf("logcond=%d (1=average over log(cond), 0=not)\n", logcond);
-    printf("parameters to extend domain: [rhox, rhoy, rhoz]=[%g, %g, %g]\n", rhox, rhoy, rhoz);
-    printf("extended boundary: [lx, ly, lz, lair]=[%g, %g, %g, %g]\n", lx, ly, lz, lair);
+  if(iproc==0) printf("------- regrid_init --------\n");
+  emf->xx = alloc1float(emf->nx + 2*emf->nb + 1);
+  emf->yy = alloc1float(emf->ny + 2*emf->nb + 1);
+  emf->zz = alloc1float(emf->nz + 2*emf->nb + 1);
+  for(i1=0; i1<=emf->nx; i1++) emf->xx[i1+emf->nb] = emf->ox + i1*emf->dx;
+  for(i2=0; i2<=emf->ny; i2++) emf->yy[i2+emf->nb] = emf->oy + i2*emf->dy;
+  for(i3=0; i3<=emf->nz; i3++) emf->zz[i3+emf->nb] = emf->oz + i3*emf->dz;
+
+  //outer nonuniform grid exterior to uniform grid
+  x = alloc1float(emf->nb+1);
+  r = create_nugrid(emf->nb, emf->lextend, emf->dx, x);
+  for(i1=0; i1<=emf->nb; i1++) {
+    emf->xx[i1] = emf->ox - x[emf->nb-i1];
+    emf->xx[i1+emf->nx+emf->nb] = emf->ox + emf->nx*emf->dx + x[i1];
   }
-  
-  emf->x1 = alloc1float(emf->n1pad);
-  emf->x2 = alloc1float(emf->n2pad);
-  emf->x3 = alloc1float(emf->n3pad);
-  emf->x1s = alloc1float(emf->n1pad);
-  emf->x2s = alloc1float(emf->n2pad);
-  emf->x3s = alloc1float(emf->n3pad);
-  emf->d1 = alloc1float(emf->n1pad);
-  emf->d2 = alloc1float(emf->n2pad);
-  emf->d3 = alloc1float(emf->n3pad);
-  emf->d1s = alloc1float(emf->n1pad);
-  emf->d2s = alloc1float(emf->n2pad);
-  emf->d3s = alloc1float(emf->n3pad);
+  r = create_nugrid(emf->nb, emf->lextend, emf->dy, x);
+  for(i2=0; i2<=emf->nb; i2++) {
+    emf->yy[i2] = emf->oy - x[emf->nb-i2];
+    emf->yy[i2+emf->ny+emf->nb] = emf->oy + emf->ny*emf->dy + x[i2];
+  }
+  r = create_nugrid(emf->nb, emf->lextend, emf->dz, x);
+  for(i3=0; i3<=emf->nb; i3++) {
+    emf->zz[i3] = emf->oz - x[emf->nb-i3];
+    emf->zz[i3+emf->nz+emf->nb] = emf->oz + emf->nz*emf->dz + x[i3];
+  }
+  free(x);
 
-  nb1 = emf->nb_air;
-  nb2 = emf->nb_air;
-  nb3 = emf->nb_air;
-  if(!emf->istretch){//uniform grid without stretching
-    nb = (emf->n1 - emf->nx)/2;
-    for(i1=0; i1<=emf->nx; i1++) emf->x1[nb+i1] = emf->ox + i1*emf->dx;
+  emf->x1min = emf->xx[0];
+  emf->x1max = emf->xx[emf->nx + 2*emf->nb];
+  emf->x2min = emf->yy[0];
+  emf->x2max = emf->yy[emf->ny + 2*emf->nb];
+  emf->x3min = emf->zz[0];
+  emf->x3max = emf->zz[emf->nz + 2*emf->nb];
+  if(emf->verb){
+    printf("[x1min, x1max]=[%g,%g]\n", emf->x1min, emf->x1max);
+    printf("[x2min, x2max]=[%g,%g]\n", emf->x2min, emf->x2max);
+    printf("[x3min, x3max]=[%g,%g]\n", emf->x3min, emf->x3max);
+  }
 
-    x = alloc1float(nb+1);//outer nonuniform grid exterior to uniform grid
-    r = create_nugrid(nb, lx, emf->dx, x, 1);
-    for(i1=0; i1<=nb; i1++){
-      emf->x1[nb+emf->nx+i1] = emf->x1[nb+emf->nx] + x[i1];
-      emf->x1[nb-i1] = emf->x1[nb] - x[i1];
+  //extend the input model
+  nxpad = emf->nx + 2*emf->nb;
+  nypad = emf->ny + 2*emf->nb;
+  nzpad = emf->nz + 2*emf->nb;
+  sig11 = alloc3float(nxpad, nypad, nzpad);
+  sig22 = alloc3float(nxpad, nypad, nzpad);
+  rho33 = alloc3float(nxpad, nypad, nzpad);
+  //fill interior part
+  for(i3=0; i3<emf->nz; i3++){
+    j3 = i3 + emf->nb;
+    for(i2=0; i2<emf->ny; i2++){
+      j2 = i2 + emf->nb;
+      for(i1=0; i1<emf->nx; i1++){
+	j1 = i1 + emf->nb;
+	sig11[j3][j2][j1] = 1./emf->rho11[i3][i2][i1];
+	sig22[j3][j2][j1] = 1./emf->rho22[i3][i2][i1];
+	rho33[j3][j2][j1] = emf->rho33[i3][i2][i1];
+      }
     }
-    free1float(x);
-    emf->x1min = emf->x1[0];
-    emf->x1max = emf->x1[emf->n1];
-    nb1 = nb;
-        
-    //------------------------------------------
-    nb = (emf->n2 - emf->ny)/2;
-    for(i2=0; i2<=emf->ny; i2++) emf->x2[nb+i2] = emf->oy + i2*emf->dy;
-
-    x = alloc1float(nb+1);//outer nonuniform grid exterior to uniform grid
-    r = create_nugrid(nb, ly, emf->dy, x, 1);
-    for(i2=0; i2<=nb; i2++){
-      emf->x2[nb-i2] = emf->x2[nb] - x[i2];
-      emf->x2[nb+emf->ny+i2] = emf->x2[nb+emf->ny] + x[i2];
+  }
+  //we then extend model on each side
+  for(k=0; k<nzpad; k++){
+    for(j=0; j<nypad; j++){
+      for(i=0; i<emf->nb; i++){
+	sig11[k][j][i] = sig11[k][j][emf->nb];
+	sig11[k][j][nxpad-1-i] = sig11[k][j][nxpad-1-emf->nb];
+	sig22[k][j][i] = sig22[k][j][emf->nb];
+	sig22[k][j][nxpad-1-i] = sig22[k][j][nxpad-1-emf->nb];
+	rho33[k][j][i] = rho33[k][j][emf->nb];
+	rho33[k][j][nxpad-1-i] = rho33[k][j][nxpad-1-emf->nb];
+      }
     }
-    free1float(x);
-    emf->x2min = emf->x2[0];
-    emf->x2max = emf->x2[emf->n2];
-    nb2 = nb;
+  }
+  for(k=0; k<nzpad; k++){
+    for(j=0; j<emf->nb; j++){
+      for(i=0; i<nxpad; i++){
+	sig11[k][j][i] = sig11[k][emf->nb][i];
+	sig11[k][nypad-1-j][i] = sig11[k][nypad-1-emf->nb][i];
+	sig22[k][j][i] = sig22[k][emf->nb][i];
+	sig22[k][nypad-1-j][i] = sig22[k][nypad-1-emf->nb][i];
+	rho33[k][j][i] = rho33[k][emf->nb][i];
+	rho33[k][nypad-1-j][i] = rho33[k][nypad-1-emf->nb][i];
+      }
+    }
+  }
+  for(k=0; k<emf->nb; k++){
+    for(j=0; j<nypad; j++){
+      for(i=0; i<nxpad; i++){
+	sig11[k][j][i] = 1./emf->rho_air;//fill in with air
+	sig11[nzpad-1-k][j][i] = sig11[nzpad-1-emf->nb][k][i];
+	sig22[k][j][i] = 1./emf->rho_air;//fill in with air
+	sig22[nzpad-1-k][j][i] = sig22[nzpad-1-emf->nb][k][i];
+	rho33[k][j][i] = emf->rho_air;//fill in with air
+	rho33[nzpad-1-k][j][i] = rho33[nzpad-1-emf->nb][k][i];
+      }
+    }
+  }
     
-    //------------------------------------------
-    nb = (emf->n3 - emf->nz)/2;
-    for(i3=0; i3<=emf->nz; i3++) emf->x3[nb+i3] = emf->oz + i3*emf->dz;
+  emf->x1 = alloc1float(emf->n1+1);
+  emf->x2 = alloc1float(emf->n2+1);
+  emf->x3 = alloc1float(emf->n3+1);
+  emf->x1s = alloc1float(emf->n1+1);
+  emf->x2s = alloc1float(emf->n2+1);
+  emf->x3s = alloc1float(emf->n3+1);
+  emf->d1 = alloc1float(emf->n1+1);
+  emf->d2 = alloc1float(emf->n2+1);
+  emf->d3 = alloc1float(emf->n3+1);
+  emf->d1s = alloc1float(emf->n1+1);
+  emf->d2s = alloc1float(emf->n2+1);
+  emf->d3s = alloc1float(emf->n3+1);
 
-    x = alloc1float(nb+1);//outer nonuniform grid exterior to uniform grid
-    r = create_nugrid(nb, lz, emf->dz, x, 1);
-    for(i3=0; i3<=nb; i3++){
-      emf->x3[nb+emf->nz+i3] = emf->x3[nb+emf->nz] + x[i3];
-      emf->x3[nb-i3] = emf->x3[nb] - x[i3];
-    }
-    if(emf->addair){
-      r = create_nugrid(nb, lair, emf->dz, x, 1);
-      for(i3=0; i3<=nb; i3++) emf->x3[nb-i3] = emf->x3[nb] - x[i3];
-    }
-    free1float(x);
-    emf->x3min = emf->x3[0];
-    emf->x3max = emf->x3[emf->n3];
-    nb3 = nb;
+  //power-law grid stretching
+  //-----------------------------
+  np1 = emf->n1/2;
+  np2 = emf->n1 - np1;
 
-  }else{//power-law grid stretching
-    //--------------------------------------------
-    x = alloc1float(emf->n1/2+1);//outer nonuniform grid exterior to uniform grid
-    dleft = acq->src_x1[0] - emf->ox;
-    dright = emf->ox + emf->nx*emf->dx - acq->src_x1[0];
-    dist = MAX(dleft, dright) + lx;
-    r = create_nugrid(emf->n1/2, dist, emf->d1min, x, 1);
-    emf->x1[emf->n1pad/2] = acq->src_x1[0];
-    for(i1=1; i1<=emf->n1/2; i1++){
-      emf->x1[emf->n1pad/2-i1] = emf->x1[emf->n1pad/2] - x[i1];
-      emf->x1[emf->n1pad/2+i1] = emf->x1[emf->n1pad/2] + x[i1];
-    }
-    free1float(x);
-    emf->x1min = emf->x1[0];
-    emf->x1max = emf->x1[emf->n1pad-1];
-    if(emf->verb) printf("extended domain [x1min, x1max]=[%g, %g], stretching r=%g\n", emf->x1min, emf->x1max, r);
-
-    //--------------------------------------------
-    x = alloc1float(emf->n2/2+1);//outer nonuniform grid exterior to uniform grid
-    dleft = acq->src_x2[0] - emf->oy;
-    dright = emf->oy + emf->ny*emf->dy - acq->src_x2[0];
-    dist = MAX(dleft, dright) + ly;
-    r = create_nugrid(emf->n2/2, dist, emf->d2min, x, 1);
-    emf->x2[emf->n2pad/2] = acq->src_x2[0];
-    for(i2=1; i2<=emf->n2/2; i2++){
-      emf->x2[emf->n2pad/2-i2] = emf->x2[emf->n2pad/2] - x[i2];
-      emf->x2[emf->n2pad/2+i2] = emf->x2[emf->n2pad/2] + x[i2];
-    }
-    free1float(x);
-    emf->x2min = emf->x2[0];
-    emf->x2max = emf->x2[emf->n2pad-1];
-    if(emf->verb) printf("extended domain [x2min, x2max]=[%g, %g], stretching r=%g\n", emf->x2min, emf->x2max, r);
+  x = alloc1float(np1+1);
+  dist = acq->src_x1[0] - emf->x1min;
+  r = create_nugrid(np1, dist, emf->d1min, x);
+  for(i1=0; i1<=np1; i1++) emf->x1[np1-i1] = acq->src_x1[0] - x[i1];
+  free1float(x);
+  if(emf->verb) printf("left stretching r=%g\n", r);
   
-    //---------------------------------------------
-    dist = emf->addair?lair:lz;//100 km
-    emf->x3min = emf->oz - dist;
-    emf->x3max = emf->oz + emf->dz*emf->nz + lz;
-    if(emf->verb) printf("extended domain [x3min, x3max]=[%g, %g]\n", emf->x3min, emf->x3max);
+  x = alloc1float(np2+1);
+  dist = emf->x1max - acq->src_x1[0];
+  r = create_nugrid(np2, dist, emf->d1min, x);
+  for(i1=0; i1<=np2; i1++) emf->x1[np1+i1] = acq->src_x1[0] + x[i1];
+  free1float(x);
+  if(emf->verb) printf("right stretching r=%g\n", r);
 
-    x = alloc1float(emf->nb_air+1);
-    r = create_nugrid(emf->nb_air, dist, emf->dz, x, emf->istretch);
-    if(emf->verb) printf("                x3 top stretching r=%g (above sea surface)\n", r);
-    for(i3=0; i3<=emf->nb_air; i3++) emf->x3[emf->nb_air-i3] = emf->oz - x[i3];
-    free1float(x);
+  //-----------------------------
+  np1 = emf->n2/2;
+  np2 = emf->n2 - np1;
 
-    dist = emf->x3max-emf->oz;
-    nz = emf->n3pad -1 - emf->nb_air;//remaining nz points with coordinates unassigned
-    x = alloc1float(nz + 1);
-    r = create_nugrid(nz, dist, emf->d3min, x, emf->istretch);
-    if(emf->verb) printf("                x3 bottom stretching r=%g (below sea surface)\n", r);
-    for(i3=0; i3<=nz; i3++) emf->x3[i3+emf->nb_air] = emf->x3[emf->nb_air] + x[i3];
-    free1float(x);
-  }
+  x = alloc1float(np1+1);
+  dist = acq->src_x2[0] - emf->x2min;
+  r = create_nugrid(np1, dist, emf->d2min, x);
+  for(i2=0; i2<=np1; i2++) emf->x2[np1-i2] = acq->src_x2[0] - x[i2];
+  free1float(x);
+  if(emf->verb) printf("front stretching r=%g\n", r);
+
+  x = alloc1float(np2+1);
+  dist = emf->x2max - acq->src_x2[0];
+  r = create_nugrid(np2, dist, emf->d2min, x);
+  for(i2=0; i2<=np2; i2++) emf->x2[np1+i2] = acq->src_x2[0] + x[i2];
+  free1float(x);
+  if(emf->verb) printf("rear stretching r=%g\n", r);
+  
+  //---------------------------------------------
+  np1 = find_index(emf->nx + 2*emf->nb, emf->zz, acq->src_x3[0]) + 5;
+  np2 = emf->n3 - np1;
+
+  for(i3=0; i3<=np1; i3++) emf->x3[i3] = emf->zz[i3];
+  if(emf->verb) printf("top above the source: use %d grid from input model\n", np1);
+    
+  x = alloc1float(np2+1);
+  dist = emf->x3max - emf->x3[np1];
+  r = create_nugrid(np2, dist, emf->d3min, x);
+  for(i3=0; i3<=np2; i3++) emf->x3[np1+i3] = emf->x3[np1] + x[i3];
+  free1float(x);
+  if(emf->verb) printf("bottom stretching r=%g\n", r);
+  
 
   //this will be used for extraction of EM data at receiver locations
   generate_staggered_xs_dx(emf->n1, emf->x1, emf->x1s, emf->d1, emf->d1s);
   generate_staggered_xs_dx(emf->n2, emf->x2, emf->x2s, emf->d2, emf->d2s);
   generate_staggered_xs_dx(emf->n3, emf->x3, emf->x3s, emf->d3, emf->d3s);
-
-  //--------------------------------------------------------------
-  vmax = emf->rho11[0][0][0];
-  vmin = emf->rho11[0][0][0];
-  for(i3=0; i3<emf->nz; i3++){
-    for(i2=0; i2<emf->ny; i2++){
-      for(i1=0; i1<emf->nx; i1++){
-	vmax = MAX(vmax, emf->rho11[i3][i2][i1]);
-	vmin = MIN(vmin, emf->rho11[i3][i2][i1]);
-	vmax = MAX(vmax, emf->rho22[i3][i2][i1]);
-	vmin = MIN(vmin, emf->rho22[i3][i2][i1]);
-	vmax = MAX(vmax, emf->rho33[i3][i2][i1]);
-	vmin = MIN(vmin, emf->rho33[i3][i2][i1]);
-      }
-    }
-  }
-  if(emf->verb) printf("unextended model [rhomin, rhomax]=[%g, %g]\n", vmin, vmax);
 
   emf->sigma11 = alloc3float(emf->n1, emf->n2, emf->n3);
   emf->sigma22 = alloc3float(emf->n1, emf->n2, emf->n3);
@@ -209,99 +216,28 @@ void regrid_init(acq_t *acq, emf_t *emf, int ifreq)
   emf->invmur = alloc3float(emf->n1, emf->n2, emf->n3);
   emf->vol = alloc3float(emf->n1, emf->n2, emf->n3);
 
-  if(emf->istretch){//stretched grid requires medium homogenization
-    //--------------------------------------------------------------
-    if(!logcond){ //average horizontal conductivity and vertical resistivity
-      homogenization(emf, emf->rho11, emf->sigma11, 1);
-      homogenization(emf, emf->rho22, emf->sigma22, 1);
-      homogenization(emf, emf->rho33, emf->sigma33, 2);
-    }else{//average over log(conductivity)
-      homogenization(emf, emf->rho11, emf->sigma11, 3);
-      homogenization(emf, emf->rho22, emf->sigma22, 3);
-      homogenization(emf, emf->rho33, emf->sigma33, 3);
-    }
-  }else{//uniform grid requires grid extension
-    for(i3=0; i3<emf->nz; i3++){
-      j3 = i3+nb3;
-      for(i2=0; i2<emf->ny; i2++){
-	j2 = i2+nb2;
-	for(i1=0; i1<emf->nx; i1++){
-	  j1 = i1+nb1;
-	  emf->sigma11[j3][j2][j1] = 1./emf->rho11[i3][i2][i1];
-	  emf->sigma22[j3][j2][j1] = 1./emf->rho22[i3][i2][i1];
-	  emf->sigma33[j3][j2][j1] = 1./emf->rho33[i3][i2][i1];
-	}
-      }
-    }
-    for(i3=0; i3<emf->n3; i3++){
-      for(i2=0; i2<emf->n2; i2++){
-	for(i1=0; i1<nb1; i1++){
-	  emf->sigma11[i3][i2][i1] = emf->sigma11[i3][i2][nb1];
-	  emf->sigma22[i3][i2][i1] = emf->sigma22[i3][i2][nb1];
-	  emf->sigma33[i3][i2][i1] = emf->sigma33[i3][i2][nb1];
-	  j1 = emf->n1 - 1 - i1;
-	  emf->sigma11[i3][i2][j1] = emf->sigma11[i3][i2][emf->n1-1-nb1];
-	  emf->sigma22[i3][i2][j1] = emf->sigma22[i3][i2][emf->n1-1-nb1];
-	  emf->sigma33[i3][i2][j1] = emf->sigma33[i3][i2][emf->n1-1-nb1];	  
-	}
-      }
-    }
-    for(i3=0; i3<emf->n3; i3++){
-      for(i2=0; i2<nb2; i2++){
-	j2 = emf->n2 - 1 - i2;
-	for(i1=0; i1<emf->n1; i1++){
-	  emf->sigma11[i3][i2][i1] = emf->sigma11[i3][nb2][i1];
-	  emf->sigma22[i3][i2][i1] = emf->sigma22[i3][nb2][i1];
-	  emf->sigma33[i3][i2][i1] = emf->sigma33[i3][nb2][i1];
-	  
-	  emf->sigma11[i3][j2][i1] = emf->sigma11[i3][emf->n2-1-nb2][i1];
-	  emf->sigma22[i3][j2][i1] = emf->sigma22[i3][emf->n2-1-nb2][i1];
-	  emf->sigma33[i3][j2][i1] = emf->sigma33[i3][emf->n2-1-nb2][i1];
-	}
-      }
-    }
-
-    for(i3=0; i3<nb3; i3++){
-      j3 = emf->n3 - 1 - i3;
-      for(i2=0; i2<emf->n2; i2++){
-	for(i1=0; i1<emf->n1; i1++){
-	  emf->sigma11[i3][i2][i1] = (emf->addair)?1./emf->rho_air:emf->sigma11[nb3][i2][i1];
-	  emf->sigma22[i3][i2][i1] = (emf->addair)?1./emf->rho_air:emf->sigma22[nb3][i2][i1];
-	  emf->sigma33[i3][i2][i1] = (emf->addair)?1./emf->rho_air:emf->sigma33[nb3][i2][i1];
-	  
-	  emf->sigma11[j3][i2][i1] = emf->sigma11[emf->n3-1-nb3][i2][i1];
-	  emf->sigma22[j3][i2][i1] = emf->sigma22[emf->n3-1-nb3][i2][i1];
-	  emf->sigma33[j3][i2][i1] = emf->sigma33[emf->n3-1-nb3][i2][i1];
-	}
-      }
-    }
-    
-  }//end if
-
-  //------------------------------------------------------------------
-  vmax = emf->sigma11[0][0][0];
-  vmin = emf->sigma11[0][0][0];
+  homogenization(sig11, emf->sigma11, nxpad, nypad, nzpad, emf->xx, emf->yy, emf->zz, emf->n1, emf->n2, emf->n3, emf->x1, emf->x2, emf->x3);
+  homogenization(sig22, emf->sigma22, nxpad, nypad, nzpad, emf->xx, emf->yy, emf->zz, emf->n1, emf->n2, emf->n3, emf->x1, emf->x2, emf->x3);
+  homogenization(rho33, emf->sigma33, nxpad, nypad, nzpad, emf->xx, emf->yy, emf->zz, emf->n1, emf->n2, emf->n3, emf->x1, emf->x2, emf->x3);
   for(i3=0; i3<emf->n3; i3++){
     for(i2=0; i2<emf->n2; i2++){
       for(i1=0; i1<emf->n1; i1++){
-	vmax = MAX(vmax, emf->sigma11[i3][i2][i1]);
-	vmin = MIN(vmin, emf->sigma11[i3][i2][i1]);
-	vmax = MAX(vmax, emf->sigma22[i3][i2][i1]);
-	vmin = MIN(vmin, emf->sigma22[i3][i2][i1]);
- 	vmax = MAX(vmax, emf->sigma33[i3][i2][i1]);
-	vmin = MIN(vmin, emf->sigma33[i3][i2][i1]);
+	emf->sigma33[i3][i2][i1] = 1./emf->sigma33[i3][i2][i1];//convert from rho to sigma
 	emf->invmur[i3][i2][i1] = 1.;
 	emf->vol[i3][i2][i1] = emf->d1s[i1]*emf->d2s[i2]*emf->d3s[i3];//volume assigned at cell center
       }
     }
   }
-  if(emf->verb) printf("extended model   [rhomin, rhomax]=[%g, %g]\n", 1./vmax, 1./vmin);
-
+  
 }
 
 /*< free variables in emf >*/
 void regrid_free(emf_t *emf)
 {
+  free1float(emf->xx);
+  free1float(emf->yy);
+  free1float(emf->zz);
+  
   free1float(emf->x1);
   free1float(emf->x2);
   free1float(emf->x3);
