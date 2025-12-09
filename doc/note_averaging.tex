@@ -1,0 +1,251 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{algorithmicx}
+\usepackage[left=2cm,top=2.5cm,right=2cm,bottom=2.5cm]{geometry}
+
+\title{Convervative averaging}
+\author{Chatgpt}
+
+\begin{document}
+
+\maketitle
+
+It is the "most common and clean case" in physics and numerical modeling (finite volume, EM, CFD, etc.):
+two "nonuniform grids" that cover the "same physical domain" (same total length), and you want to transfer "cell averages" conservatively from one grid to another.
+
+Let’s go step by step carefully.
+
+
+\section{Problem setup}
+
+You have a 1D physical domain $([x_0, x_N])$.
+\begin{itemize}
+  \item "Source grid" (old grid):
+  edges $(x_{1/2}, x_{3/2}, \dots, x_{N_s+1/2})$
+  cell averages $(f_i), (i = 1,\dots,N_s)$
+\item "Target grid" (new grid):
+  edges $(X_{1/2}, X_{3/2}, \dots, X_{N_t+1/2})$
+  unknown averages $(F_j), (j = 1,\dots,N_t)$
+\end{itemize}
+Both grids cover "exactly the same domain": $[x_{0},x_{N_s}] = [X_{0}, X_{N_t}]=[x_0, x_N]$.
+
+\section{Conservative averaging principle}
+
+We want to ensure "total integral is preserved:"
+\begin{equation}
+  \sum_i f_i , \Delta x_i = \sum_j F_j , \Delta X_j
+\end{equation}
+where $\Delta x_i = x_{i+1/2} - x_{i-1/2}$, $\Delta X_j = X_{j+1/2} - X_{j-1/2}$.
+The physical requirement is that the "integrated quantity" in each target cell equals the "overlap-weighted sum" of source cell integrals.
+For each target cell $( j )$:
+\begin{equation}
+F_j = \frac{1}{\Delta X_j} \sum_i f_i , L_{ij}
+\end{equation}
+where $( L_{ij} )$ is the "overlap length" between source cell $(i)$ and target cell $(j)$:
+\begin{equation}
+L_{ij} = \max(0, \min(x_{i+1/2}, X_{j+1/2}) - \max(x_{i-1/2}, X_{j-1/2}))
+\end{equation}
+This simple expression guarantees "strict conservation" over the entire domain.
+
+
+\section{Implementation (robust + exact for same-length grids)}
+
+Here’s a clean, working Python version (but same logic applies in C or Fortran):
+\begin{verbatim}
+import numpy as np
+
+def conservative_average_same_length(xe, f, Xe):
+    """
+    Conservative remap (finite-volume average) from source grid xe->Xe
+    when both grids cover the same domain.
+
+    Parameters
+    ----------
+    xe : array of shape (Ns+1,) - source cell edges
+    f  : array of shape (Ns,)   - source cell averages
+    Xe : array of shape (Nt+1,) - target cell edges
+
+    Returns
+    -------
+    F  : array of shape (Nt,)   - target cell averages (conservative)
+    """
+    Ns = len(f)
+    Nt = len(Xe) - 1
+    F = np.zeros(Nt, dtype=float)
+
+    i = 0
+    for j in range(Nt):
+        X1, X2 = Xe[j], Xe[j+1]
+        dx_target = X2 - X1
+        s = 0.0
+        # accumulate source contributions to target cell j
+        while i < Ns and xe[i+1] <= X1:
+            i += 1  # skip source cells to the left
+        k = i
+        while k < Ns and xe[k] < X2:
+            overlap = max(0.0, min(xe[k+1], X2) - max(xe[k], X1))
+            if overlap > 0.0:
+                s += f[k] * overlap
+            k += 1
+        F[j] = s / dx_target
+    return F
+
+xe = np.array([0.0, 1.0, 2.5, 4.0])   # source edges (3 cells)
+f  = np.array([2.0, 3.0, 1.0])        # source cell averages
+Xe = np.array([0.0, 1.5, 3.0, 4.0])   # target edges (3 cells)
+
+F = conservative_average_same_length(xe, f, Xe)
+
+# check conservation:
+source_total = np.sum(f * np.diff(xe))
+target_total = np.sum(F * np.diff(Xe))
+
+print("Target averages:", F)
+print("Source integral:", source_total)
+print("Target integral:", target_total)
+\end{verbatim}
+\begin{itemize}
+\item This is $O(N_s + N_t)$ and strictly conservative.
+\item Works even when the grids are nonuniform and not aligned.
+\end{itemize}
+
+
+\section{Summary}
+
+To perform "conservative averaging between two nonuniform grids that span the same physical domain":
+
+\begin{equation}
+F_j = \frac{1}{\Delta X_j} \sum_i f_i \cdot \max(0, \min(x_{i+1/2}, X_{j+1/2}) - \max(x_{i-1/2}, X_{j-1/2}))
+\end{equation}
+This preserves the "integrated quantity" exactly, even when the grids are: nonuniform, not aligned, and have different cell counts.
+
+\section{ Derive an averaging rule from a conservation law — with a concrete example}
+
+Short answer: pick the *physical conservation statement* you care about (flux continuity, conserved current, total resistance, energy, etc.), write it for the heterogeneous medium and for a *homogeneous* effective medium, set them equal, and solve for the effective property. The resulting average depends on the *physics* (series vs parallel, normal vs tangential to interfaces) and the geometry.
+
+Below I walk through a concrete, commonly-used example (1D layered conduction) and a finite-volume face average useful for discretizations.
+
+\subsection{Example 1 — 1D layered conduction (why harmonic mean appears)}
+
+Consider two horizontal layers in series (current/heat/flux flows vertically through both). Layer 1: thickness $t_1$, conductivity $\sigma_1$. Layer 2: $t_2,\sigma_2$. Apply a vertical potential difference $\Delta V$ across the combined thickness $T=t_1+t_2$.
+
+**Physics / conservation used:** the same vertical flux $J$ (current density) flows through both layers (steady state, series). Ohm/Fourier law locally: $J = \sigma  \frac{\Delta V_{layer}}{t_{layer}}$. The total voltage drop equals sum of drops:
+
+\begin{equation}
+\Delta V = \Delta V_1 + \Delta V_2 = \frac{J\,t_1}{\sigma_1} + \frac{J\,t_2}{\sigma_2}.
+\end{equation}
+
+Define an effective conductivity $\sigma_{eff}$ for the whole thickness so that
+
+\begin{equation}
+J = \sigma_{eff}\,\frac{\Delta V}{T}.
+\end{equation}
+
+Substitute $\Delta V$ and cancel $J$:
+
+\begin{equation}
+\frac{1}{\sigma_{eff}} \;=\; \frac{t_1}{T}\frac{1}{\sigma_1} \;+\; \frac{t_2}{T}\frac{1}{\sigma_2}.
+\end{equation}
+
+So
+
+\begin{equation}
+\sigma_{\rm eff} \;=\; \frac{T}{\,\frac{t_1}{\sigma_1}+\frac{t_2}{\sigma_2}\,}
+\end{equation}
+
+— the **weighted harmonic mean** (weights = thickness fractions).
+
+\subsubsection{ Numerical check (step-by-step arithmetic)}
+
+Let $t_1=2$ m, $t_2=3$ m, $\sigma_1=0.10$ S/m, $\sigma_2=0.01$ S/m.
+Compute:
+
+* $T = 2+3 = 5$.
+* $t_1/\sigma_1 = 2 / 0.10 = 20$.
+* $t_2/\sigma_2 = 3 / 0.01 = 300$.
+* Sum = $20 + 300 = 320$.
+* $\sigma_{\rm eff} = 5 / 320 = 0.015625$ S/m.
+
+If instead you average resistivity $\rho=1/\sigma$ the series average is arithmetic:
+
+\begin{equation}
+\rho_{\rm eff} = \frac{t_1\rho_1 + t_2\rho_2}{T},
+\end{equation}
+
+and $1/\rho_{\rm eff}=\sigma_{\rm eff}$ — same number (check: $\rho_1 = 10$, $\rho_2=100$; $\rho_{\rm eff}=(2\cdot10+3\cdot100)/5=320/5=64\ \Omega\cdot m$; $1/64=0.015625$ S/m).
+
+**Interpretation:** harmonic mean arises because you conserve flux (same $J$) and add the drops.
+
+
+\subsection{Example 2 — parallel conduction (arithmetic mean)}
+
+If instead the layers are side-by-side and subject to the same potential difference (i.e., they are *in parallel* electrically or thermally), the total flux is the sum of the fluxes:
+
+\begin{equation}
+J_{tot} = J_1+J_2 = \sigma_1\frac{\Delta V}{t} + \sigma_2\frac{\Delta V}{t} = (\sigma_1+\sigma_2)\frac{\Delta V}{t}.
+\end{equation}
+
+Defining $\sigma_{\rm eff}$ so that $J_{tot}=\sigma_{\rm eff}\frac{\Delta V}{t}$ gives
+
+\begin{equation}
+\sigma_{\rm eff} = \frac{1}{2}(\sigma_1+\sigma_2)
+\end{equation}
+
+(for two equal-width paralell pieces; in general a weighted arithmetic mean). So **parallel → arithmetic mean**, **series → harmonic mean**.
+
+
+\subsection{ Example 3 — finite-volume face conductivity (useful for discretization on nonuniform grid)}
+
+In finite-volume / two-point flux approximation you demand **flux continuity across a cell face**. Consider two adjacent control volumes with centers at distances $d_L$ and $d_R$ from the face, with conductivities $\sigma_L$ and $\sigma_R$. The face conductivity $\sigma_f$ is chosen so that the flux computed from the left side equals the flux from the right and equals the flux through the face.
+
+From linear interpolation of potential between centers, one obtains
+
+\begin{equation}
+\sigma_f \;=\; \frac{d_L + d_R}{\,\frac{d_L}{\sigma_L} + \frac{d_R}{\sigma_R}\,}
+\end{equation}
+
+which is a **distance-weighted harmonic mean**. (If $d_L=d_R$ this reduces to the simple harmonic mean.)
+
+\subsubsection{ Small numeric example}
+
+Let $d_L=d_R=1$, $\sigma_L=0.10$, $\sigma_R=0.01$:
+
+* numerator $=1+1=2$.
+* denominator $=1/0.10 + 1/0.01 = 10 + 100 = 110$.
+* $\sigma_f = 2/110 \approx 0.0181818$ S/m.
+
+This is exactly what many FD/FV codes use for face transmissibility when coefficients are discontinuous.
+
+
+\subsection{ How to do this in general (recipe)}
+
+1. **Identify the governing (conservation) equation** for your problem (e.g. $\nabla\!\cdot(\sigma\nabla\phi)=0$, conservation of mass, energy, momentum, etc.).
+2. **Integrate or write the balance** over the region of interest (control volume, series elements, network).
+3. **Assume piecewise-constant properties** on subregions (or prescribe spatial variation) and express the global response (total flux, total resistance, total energy) in terms of subregion properties.
+4. **Define the effective property** by requiring the homogeneous medium with that property gives the same global response.
+5. **Solve algebraically** to get the averaging formula. Inspect the result: harmonic, arithmetic, geometric, or a weighted version will appear depending on which quantity was conserved.
+
+---
+
+\subsection{A brief note about anisotropy / tensors}
+
+When conductivity (or diffusivity) is a tensor, the normal component across an interface averages like the scalar normal conductivity (harmonic for series of layers normal to flow), while tangential components (parallel to layers) average like the parallel case (arithmetic). For full tensors you must transform to the local coordinate system relative to the interface, average appropriate components, and transform back.
+
+---
+
+\subsection{ Quick summary}
+
+* Conservation of *flux* through series layers → **harmonic mean** (weighted by thickness).
+* Conservation of *potential* across parallel paths → **arithmetic mean** (weighted by area/width).
+* Finite-volume face average enforcing flux continuity → **distance-weighted harmonic mean**.
+* Procedure: write conservation → express global response → define effective property → solve.
+
+
+\end{document}
