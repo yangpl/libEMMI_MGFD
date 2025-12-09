@@ -1,4 +1,5 @@
-/* Medium homogenization by volume averaging
+/* Medium homogenization by volume averaging 
+ * (tensor product of conservative averaging in 1D, see doc/note_averaging.pdf)
  *------------------------------------------------------------------------
  *
  * Copyright (c) 2020-2022 Harbin Institute of Technology. All rights reserved.
