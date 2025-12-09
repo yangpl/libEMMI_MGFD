@@ -1,0 +1,26 @@
+gfortran create_acquisition_oneline.f90
+./a.out
+
+mpirun -np 1 time -v ../bin/main mode=0 \
+       freqs=0.25 ,0.75,1.25 \
+       chsrc=Ex \
+       chrec=Ex,Ey,Ez \
+       nx=100 \
+       ny=100 \
+       nz=100 \
+       dx=200 \
+       dy=200 \
+       dz=50 \
+       ox=-10e3 \
+       oy=-10e3 \
+       oz=0 \
+       d1min=50 \
+       d2min=50 \
+       d3min=20 \
+       frho11=frho11 \
+       frho22=frho22 \
+       frho33=frho33 \
+       fsrc=sources.txt \
+       frec=receivers.txt \
+       fsrcrec=src_rec_table.txt \
+
