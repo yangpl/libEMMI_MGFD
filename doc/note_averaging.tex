@@ -128,15 +128,11 @@ This preserves the "integrated quantity" exactly, even when the grids are: nonun
 
 \section{ Derive an averaging rule from a conservation law — with a concrete example}
 
-Short answer: pick the *physical conservation statement* you care about (flux continuity, conserved current, total resistance, energy, etc.), write it for the heterogeneous medium and for a *homogeneous* effective medium, set them equal, and solve for the effective property. The resulting average depends on the *physics* (series vs parallel, normal vs tangential to interfaces) and the geometry.
-
-Below I walk through a concrete, commonly-used example (1D layered conduction) and a finite-volume face average useful for discretizations.
-
 \subsection{Example 1 — 1D layered conduction (why harmonic mean appears)}
 
 Consider two horizontal layers in series (current/heat/flux flows vertically through both). Layer 1: thickness $t_1$, conductivity $\sigma_1$. Layer 2: $t_2,\sigma_2$. Apply a vertical potential difference $\Delta V$ across the combined thickness $T=t_1+t_2$.
 
-**Physics / conservation used:** the same vertical flux $J$ (current density) flows through both layers (steady state, series). Ohm/Fourier law locally: $J = \sigma  \frac{\Delta V_{layer}}{t_{layer}}$. The total voltage drop equals sum of drops:
+\paragraph{Physics / conservation used}: the same vertical flux $J$ (current density) flows through both layers (steady state, series). Ohm/Fourier law locally: $J = \sigma  \frac{\Delta V_{layer}}{t_{layer}}$. The total voltage drop equals sum of drops:
 
 \begin{equation}
 \Delta V = \Delta V_1 + \Delta V_2 = \frac{J\,t_1}{\sigma_1} + \frac{J\,t_2}{\sigma_2}.
@@ -160,18 +156,19 @@ So
 \sigma_{\rm eff} \;=\; \frac{T}{\,\frac{t_1}{\sigma_1}+\frac{t_2}{\sigma_2}\,}
 \end{equation}
 
-— the **weighted harmonic mean** (weights = thickness fractions).
+— the ``weighted harmonic mean'' (weights = thickness fractions).
 
 \subsubsection{ Numerical check (step-by-step arithmetic)}
 
 Let $t_1=2$ m, $t_2=3$ m, $\sigma_1=0.10$ S/m, $\sigma_2=0.01$ S/m.
 Compute:
-
-* $T = 2+3 = 5$.
-* $t_1/\sigma_1 = 2 / 0.10 = 20$.
-* $t_2/\sigma_2 = 3 / 0.01 = 300$.
-* Sum = $20 + 300 = 320$.
-* $\sigma_{\rm eff} = 5 / 320 = 0.015625$ S/m.
+\begin{itemize}
+\item $T = 2+3 = 5$.
+\item $t_1/\sigma_1 = 2 / 0.10 = 20$.
+\item $t_2/\sigma_2 = 3 / 0.01 = 300$.
+\item Sum = $20 + 300 = 320$.
+\item $\sigma_{\rm eff} = 5 / 320 = 0.015625$ S/m.
+\end{itemize}
 
 If instead you average resistivity $\rho=1/\sigma$ the series average is arithmetic:
 
@@ -181,7 +178,7 @@ If instead you average resistivity $\rho=1/\sigma$ the series average is arithme
 
 and $1/\rho_{\rm eff}=\sigma_{\rm eff}$ — same number (check: $\rho_1 = 10$, $\rho_2=100$; $\rho_{\rm eff}=(2\cdot10+3\cdot100)/5=320/5=64\ \Omega\cdot m$; $1/64=0.015625$ S/m).
 
-**Interpretation:** harmonic mean arises because you conserve flux (same $J$) and add the drops.
+\textbf{Interpretation}: harmonic mean arises because you conserve flux (same $J$) and add the drops.
 
 
 \subsection{Example 2 — parallel conduction (arithmetic mean)}
@@ -198,12 +195,12 @@ Defining $\sigma_{\rm eff}$ so that $J_{tot}=\sigma_{\rm eff}\frac{\Delta V}{t}$
 \sigma_{\rm eff} = \frac{1}{2}(\sigma_1+\sigma_2)
 \end{equation}
 
-(for two equal-width paralell pieces; in general a weighted arithmetic mean). So **parallel → arithmetic mean**, **series → harmonic mean**.
+(for two equal-width paralell pieces; in general a weighted arithmetic mean). So \textbf{parallel requires arithmetic mean}, \textbf{series requires harmonic mean}.
 
 
 \subsection{ Example 3 — finite-volume face conductivity (useful for discretization on nonuniform grid)}
 
-In finite-volume / two-point flux approximation you demand **flux continuity across a cell face**. Consider two adjacent control volumes with centers at distances $d_L$ and $d_R$ from the face, with conductivities $\sigma_L$ and $\sigma_R$. The face conductivity $\sigma_f$ is chosen so that the flux computed from the left side equals the flux from the right and equals the flux through the face.
+In finite-volume / two-point flux approximation you demand ``flux continuity across a cell face''. Consider two adjacent control volumes with centers at distances $d_L$ and $d_R$ from the face, with conductivities $\sigma_L$ and $\sigma_R$. The face conductivity $\sigma_f$ is chosen so that the flux computed from the left side equals the flux from the right and equals the flux through the face.
 
 From linear interpolation of potential between centers, one obtains
 
@@ -211,41 +208,22 @@ From linear interpolation of potential between centers, one obtains
 \sigma_f \;=\; \frac{d_L + d_R}{\,\frac{d_L}{\sigma_L} + \frac{d_R}{\sigma_R}\,}
 \end{equation}
 
-which is a **distance-weighted harmonic mean**. (If $d_L=d_R$ this reduces to the simple harmonic mean.)
+which is a ``distance-weighted harmonic mean''. (If $d_L=d_R$ this reduces to the simple harmonic mean.)
 
 \subsubsection{ Small numeric example}
 
 Let $d_L=d_R=1$, $\sigma_L=0.10$, $\sigma_R=0.01$:
-
-* numerator $=1+1=2$.
-* denominator $=1/0.10 + 1/0.01 = 10 + 100 = 110$.
-* $\sigma_f = 2/110 \approx 0.0181818$ S/m.
-
+\begin{itemize}
+\item numerator $=1+1=2$.
+\item denominator $=1/0.10 + 1/0.01 = 10 + 100 = 110$.
+\item $\sigma_f = 2/110 \approx 0.0181818$ S/m.
+\end{itemize}
 This is exactly what many FD/FV codes use for face transmissibility when coefficients are discontinuous.
 
-
-\subsection{ How to do this in general (recipe)}
-
-1. **Identify the governing (conservation) equation** for your problem (e.g. $\nabla\!\cdot(\sigma\nabla\phi)=0$, conservation of mass, energy, momentum, etc.).
-2. **Integrate or write the balance** over the region of interest (control volume, series elements, network).
-3. **Assume piecewise-constant properties** on subregions (or prescribe spatial variation) and express the global response (total flux, total resistance, total energy) in terms of subregion properties.
-4. **Define the effective property** by requiring the homogeneous medium with that property gives the same global response.
-5. **Solve algebraically** to get the averaging formula. Inspect the result: harmonic, arithmetic, geometric, or a weighted version will appear depending on which quantity was conserved.
-
----
 
 \subsection{A brief note about anisotropy / tensors}
 
 When conductivity (or diffusivity) is a tensor, the normal component across an interface averages like the scalar normal conductivity (harmonic for series of layers normal to flow), while tangential components (parallel to layers) average like the parallel case (arithmetic). For full tensors you must transform to the local coordinate system relative to the interface, average appropriate components, and transform back.
-
----
-
-\subsection{ Quick summary}
-
-* Conservation of *flux* through series layers → **harmonic mean** (weighted by thickness).
-* Conservation of *potential* across parallel paths → **arithmetic mean** (weighted by area/width).
-* Finite-volume face average enforcing flux continuity → **distance-weighted harmonic mean**.
-* Procedure: write conservation → express global response → define effective property → solve.
 
 
 \end{document}
