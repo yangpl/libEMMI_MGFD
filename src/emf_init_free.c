@@ -9,7 +9,6 @@
 #include "cstd.h"
 #include "emf.h"
 
-int find_good_size(int n);
 int cmpfunc(const void *a, const void *b) { return ( *(int*)a - *(int*)b ); }
 
 void emf_init(emf_t *emf)
