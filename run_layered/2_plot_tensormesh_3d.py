@@ -1,8 +1,7 @@
-from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from mpl_toolkits import mplot3d
+from discretize import TensorMesh
 
 x1 = np.fromfile('fx1', dtype=np.float32)
 x2 = np.fromfile('fx2', dtype=np.float32)
@@ -14,7 +13,6 @@ hz = np.diff(x3)
 nx = np.size(x1)-1
 ny = np.size(x2)-1
 nz = np.size(x3)-1
-
 
 mesh = TensorMesh([hx, hy, hz], origin=(x1[0], x2[0], x3[0]))
 print(mesh)
