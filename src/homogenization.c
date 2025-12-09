@@ -17,7 +17,7 @@ void homogenization(float ***in, float ***out,
 		    int nx, int ny, int nz, float *xx, float *yy, float *zz,
 		    int n1, int n2, int n3, float *x1, float *x2, float *x3)
 {
-  float a, b, s, tmp;
+  float a, b, s;
   float left, right, overlap;
   float *rho1, *rho2;
   int ix, iy, iz, i, j, k;
