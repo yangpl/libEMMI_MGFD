@@ -213,7 +213,6 @@ void regrid_init(acq_t *acq, emf_t *emf)
   emf->sigma22 = alloc3float(emf->n1, emf->n2, emf->n3);
   emf->sigma33 = alloc3float(emf->n1, emf->n2, emf->n3);
   emf->invmur = alloc3float(emf->n1, emf->n2, emf->n3);
-  emf->vol = alloc3float(emf->n1, emf->n2, emf->n3);
 
   homogenization(sig11, emf->sigma11, nxpad, nypad, nzpad, emf->xx, emf->yy, emf->zz, emf->n1, emf->n2, emf->n3, emf->x1, emf->x2, emf->x3);
   homogenization(sig22, emf->sigma22, nxpad, nypad, nzpad, emf->xx, emf->yy, emf->zz, emf->n1, emf->n2, emf->n3, emf->x1, emf->x2, emf->x3);
@@ -223,7 +222,6 @@ void regrid_init(acq_t *acq, emf_t *emf)
       for(i1=0; i1<emf->n1; i1++){
 	emf->sigma33[i3][i2][i1] = 1./emf->sigma33[i3][i2][i1];//convert from rho to sigma
 	emf->invmur[i3][i2][i1] = 1.;
-	emf->vol[i3][i2][i1] = emf->d1s[i1]*emf->d2s[i2]*emf->d3s[i3];//volume assigned at cell center
       }
     }
   }
@@ -257,7 +255,6 @@ void regrid_free(emf_t *emf)
   free3float(emf->sigma22);
   free3float(emf->sigma33);
   free3float(emf->invmur);
-  free3float(emf->vol);
 }
 
 

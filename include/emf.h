@@ -25,7 +25,7 @@ typedef struct {
   float *d1, *d2, *d3;
   float *d1s, *d2s, *d3s;
   
-  float ***sigma11, ***sigma22, ***sigma33, ***invmur, ***vol;
+  float ***sigma11, ***sigma22, ***sigma33, ***invmur;
   _Complex float ***dcal_fd, ***dobs_fd, ***dres_fd;
   _Complex float ****E1, ****E2, ****E3;//EM fields
   _Complex float ****H1, ****H2, ****H3;//EM fields
