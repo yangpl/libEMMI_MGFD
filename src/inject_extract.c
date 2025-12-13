@@ -11,7 +11,13 @@
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
- 
+
+#undef id1
+#undef id2
+#undef id3
+#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*(k)))
+#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*(k)) + n123)
+#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*(k)) + 2*n123)
 
 /*< find the index k in x[] such that x[k]<= val <x[k+1] >*/
 int find_index(int n, float *x, float val);
@@ -24,13 +30,6 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   complex src_vol, src_fd, Fx, Fy, Fz;
 
   int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
-
-#undef id1
-#undef id2
-#undef id3
-#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
-#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
-#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   src_fd = 1;
   memset(b, 0, 3*n123*sizeof(complex));
@@ -118,9 +117,6 @@ void inject_source(acq_t *acq, emf_t *emf, complex *b, int ifreq)
     b[id3(i+1,j+1,k+1)] += src_vol*w1*w2*w3;
   }
 
-#undef id1
-#undef id2
-#undef id3
 }
 
 
@@ -131,13 +127,6 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
   float w1, w2, w3, vol, phi, theta;
   complex rec_vol, Fx, Fy, Fz;
   int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
-
-#undef id1
-#undef id2
-#undef id3
-#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
-#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
-#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   memset(b, 0, 3*n123*sizeof(complex));
   memset(x, 0, 3*n123*sizeof(complex));
@@ -206,7 +195,6 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     b[id2(i,j+1,k+1)] += rec_vol*(1.-w1)*w2*w3;
     b[id2(i+1,j+1,k+1)] += rec_vol*w1*w2*w3;
 
-
     //Jz(i,j,k+0.5)
     i = find_index((emf->n1+1), emf->x1, acq->rec_x1[irec]);
     j = find_index((emf->n2+1), emf->x2, acq->rec_x2[irec]);
@@ -217,7 +205,7 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     w3 = (acq->rec_x3[irec] - emf->x3s[k])/(emf->x3s[k+1]- emf->x3s[k]);
 
     vol = (emf->x1[i+1]- emf->x1[i])*(emf->x2[j+1]- emf->x2[j])*(emf->x3s[k+1]- emf->x3s[k]);
-    rec_vol = I*emf->omegas[ifreq]*mu0*Fy/vol;
+    rec_vol = I*emf->omegas[ifreq]*mu0*Fz/vol;
 	
     b[id3(i,j,k)] += rec_vol*(1.-w1)*(1.-w2)*(1.-w3);
     b[id3(i+1,j,k)] += rec_vol*w1*(1.-w2)*(1.-w3);
@@ -301,7 +289,7 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
     w3 = (acq->rec_x3[irec] - emf->x3[k])/(emf->x3[k+1]- emf->x3[k]);
 
     vol = (emf->x1s[i+1]- emf->x1s[i])*(emf->x2s[j+1]- emf->x2s[j])*(emf->x3[k+1]- emf->x3[k]);
-    rec_vol = Fy/vol;
+    rec_vol = Fz/vol;
 	
     x[id3(i,j,k)] += rec_vol*(1.-w1)*(1.-w2)*(1.-w3);
     x[id3(i+1,j,k)] += rec_vol*w1*(1.-w2)*(1.-w3);
@@ -322,9 +310,6 @@ void inject_adj_source(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq
       }
     }
   }
-#undef id1
-#undef id2
-#undef id3
 
 }
 
@@ -335,13 +320,6 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
   float w1, w2, w3, phi, theta;
   complex Fx, Fy, Fz;
   int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
-
-#undef id1
-#undef id2
-#undef id3
-#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
-#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
-#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   for(irec=0; irec<acq->nrec; irec++){
     phi = acq->rec_azimuth[irec];
@@ -493,9 +471,6 @@ void extract_emf_data(acq_t *acq, emf_t *emf, complex *x, complex *b, int ifreq)
 
   }//end for irec
 
-#undef id1
-#undef id2
-#undef id3
 }
 
 /*< extract EMF in the computing grid without rotation to build the inversion gradient >*/
@@ -512,13 +487,6 @@ void extract_electric_field(acq_t *acq, emf_t *emf, complex *x, int ifreq)
   float sigma;
   int ii, jj, kk;
   int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
-
-#undef id1
-#undef id2
-#undef id3
-#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
-#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
-#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   w1 = alloc1float(emf->nx);
   w2 = alloc1float(emf->ny);
@@ -664,9 +632,6 @@ void extract_electric_field(acq_t *acq, emf_t *emf, complex *x, int ifreq)
   free1int(i2s);
   free1int(i3s);
 
-#undef id1
-#undef id2
-#undef id3
 }
 
 /*< extract EMF in the computing grid without rotation to build the inversion gradient >*/
@@ -682,13 +647,6 @@ void extract_magnetic_field(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   complex s;
   int ii, jj, kk;
   int n123 = (emf->n1+1)*(emf->n2+1)*(emf->n3+1);
-
-#undef id1
-#undef id2
-#undef id3
-#define id1(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k))
-#define id2(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + n123)
-#define id3(i,j,k)  (i+(emf->n1+1)*(j + (emf->n2+1)*k) + 2*n123)
 
   w1 = alloc1float(emf->nx);
   w2 = alloc1float(emf->ny);
@@ -824,8 +782,8 @@ void extract_magnetic_field(acq_t *acq, emf_t *emf, complex *b, int ifreq)
   free1int(i1s);
   free1int(i2s);
   free1int(i3s);
+}
 
 #undef id1
 #undef id2
 #undef id3
-}
