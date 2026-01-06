@@ -7,8 +7,7 @@
  * Email: ypl.2100@gmail.com
  * Homepage: https://yangpl.wordpress.com
  *-----------------------------------------------------------------------*/
-#include "cstd.h"
-#include "emf.h"
+#include <stdlib.h>
 
 //volumetric averaging from in[nz][ny][nx] to out[n3][n2][n1]
 //xx[],yy[],zz[] are of length: nx+1,ny+1,nz+1
