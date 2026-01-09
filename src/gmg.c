@@ -1701,7 +1701,6 @@ void gmg_init(emf_t *emf, int ifreq)
     printf("----------------------------------------------\n");
   }  
   gmg = (gmg_t*)malloc(lmax*sizeof(gmg_t));
-  grid_init(gmg, 0);
 }
 
 /*< setup the grid and the conductivity at different multigrid level >*/
@@ -1711,7 +1710,7 @@ void grid_init(gmg_t *gmg, int lev)
   int ii, jj, kk;
   int iip1, jjp1, kkp1;
   int n1, n2, n3, repeat;
-  double val;
+  double vol, val;
 
   if(lev==0){
     gmg[lev].sc[0] = 1;//coarsening factor x
@@ -1729,7 +1728,6 @@ void grid_init(gmg_t *gmg, int lev)
     n1 = gmg[lev-1].n1/gmg[lev].sc[0];
     n2 = gmg[lev-1].n2/gmg[lev].sc[1];
     n3 = gmg[lev-1].n3/gmg[lev].sc[2];    
-    //if(verb &&gmg[lev].sc[0]*gmg[lev].sc[1]*gmg[lev].sc[2]>1) printf("lev=%d, [n1,n2,n3]=[%d,%d,%d], [scx,scy,scz]=[%d,%d,%d]\n", lev, n1, n2, n3, gmg[lev].sc[0], gmg[lev].sc[1], gmg[lev].sc[2]); 
   }
   gmg[lev].n1 = n1;
   gmg[lev].n2 = n2;
@@ -1765,10 +1763,11 @@ void grid_init(gmg_t *gmg, int lev)
     for(k=0; k<n3; k++){
       for(j=0; j<n2; j++){
 	for(i=0; i<n1; i++){
-	  gmg[lev].sigma11[k][j][i] = emf_->sigma11[k][j][i];
-	  gmg[lev].sigma22[k][j][i] = emf_->sigma22[k][j][i];
-	  gmg[lev].sigma33[k][j][i] = emf_->sigma33[k][j][i];
-	  gmg[lev].invmur[k][j][i] = emf_->invmur[k][j][i];
+	  vol = gmg[0].d1s[i]*gmg[0].d2s[j]*gmg[0].d3s[k];
+	  gmg[lev].sigma11[k][j][i] = emf_->sigma11[k][j][i]*vol;
+	  gmg[lev].sigma22[k][j][i] = emf_->sigma22[k][j][i]*vol;
+	  gmg[lev].sigma33[k][j][i] = emf_->sigma33[k][j][i]*vol;
+	  gmg[lev].invmur[k][j][i] = emf_->invmur[k][j][i]*vol;
 	}
       }
     }
@@ -1858,7 +1857,6 @@ void grid_free(gmg_t *gmg, int lev)
 /*< free the multigrid solver >*/
 void gmg_free()
 {
-  grid_free(gmg, 0);
   free(gmg);
 }
 
@@ -1869,20 +1867,9 @@ void gmg_apply(int n, complex *b, complex *x)
   int i, j, k, lev;
   double vol;
 
+  grid_init(gmg, 0);
   memcpy(&gmg[0].f[0][0][0][0], b, n*sizeof(complex));
   memset(&gmg[0].u[0][0][0][0], 0, n*sizeof(complex));
-  for(k=0; k<gmg[0].n3; k++){
-    for(j=0; j<gmg[0].n2; j++){
-      for(i=0; i<gmg[0].n1; i++){
-	//multiply volume 
-	vol = gmg[0].d1s[i]*gmg[0].d2s[j]*gmg[0].d3s[k];
-	gmg[0].sigma11[k][j][i] *= vol;
-	gmg[0].sigma22[k][j][i] *= vol;
-	gmg[0].sigma33[k][j][i] *= vol;
-	gmg[0].invmur[k][j][i] *= vol;
-      }
-    }
-  }
   for(k=0; k<=gmg[0].n3; k++){
     for(j=0; j<=gmg[0].n2; j++){
       for(i=0; i<=gmg[0].n1; i++){
@@ -1896,7 +1883,6 @@ void gmg_apply(int n, complex *b, complex *x)
       }
     }
   }
-
   for(icycle=0; icycle<ncycle; icycle++){
     for(lev=1; lev<lmax; lev++) grid_init(gmg, lev);
     if(cycleopt==1) v_cycle(gmg, 0);
@@ -1916,4 +1902,6 @@ void gmg_apply(int n, complex *b, complex *x)
   memcpy(x, &gmg[0].u[0][0][0][0], n*sizeof(complex));//copy E into x
   compute_H_from_E(gmg, 0);//compute H and store it in gmg[0].f
   memcpy(b, &gmg[0].f[0][0][0][0], n*sizeof(complex));//copy H into b
+
+  grid_free(gmg, 0);
 }
