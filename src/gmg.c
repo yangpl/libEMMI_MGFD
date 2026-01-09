@@ -1381,7 +1381,7 @@ void residual(gmg_t *gmg, int lev)
 
 
 /*< compute H and store it in gmg[0].f, must have lev=0>*/
-void compute_H_from_E(gmg_t *gmg, int lev)
+void compute_H_from_E(gmg_t *gmg)
 {
   int i, j, k;
   int ip1, jp1, kp1;
@@ -1391,18 +1391,18 @@ void compute_H_from_E(gmg_t *gmg, int lev)
   complex ***Ex, ***Ey, ***Ez;
   complex ***Hx, ***Hy, ***Hz;
 
-  n1 = gmg[lev].n1;
-  n2 = gmg[lev].n2;
-  n3 = gmg[lev].n3;
-  d1s = gmg[lev].d1s;
-  d2s = gmg[lev].d2s;
-  d3s = gmg[lev].d3s;
-  Ex = gmg[lev].u[0];
-  Ey = gmg[lev].u[1];
-  Ez = gmg[lev].u[2];
-  Hx = gmg[lev].f[0];
-  Hy = gmg[lev].f[1];
-  Hz = gmg[lev].f[2];
+  n1 = gmg[0].n1;
+  n2 = gmg[0].n2;
+  n3 = gmg[0].n3;
+  d1s = gmg[0].d1s;
+  d2s = gmg[0].d2s;
+  d3s = gmg[0].d3s;
+  Ex = gmg[0].u[0];
+  Ey = gmg[0].u[1];
+  Ez = gmg[0].u[2];
+  Hx = gmg[0].f[0];
+  Hy = gmg[0].f[1];
+  Hz = gmg[0].f[2];
 
   n = (n1+1)*(n2+1)*(n3+1);
   memset(&Hx[0][0][0], 0, n*sizeof(complex));
@@ -1865,7 +1865,6 @@ void gmg_free()
 void gmg_apply(int n, complex *b, complex *x)
 {
   int i, j, k, lev;
-  double vol;
 
   grid_init(gmg, 0);
   memcpy(&gmg[0].f[0][0][0][0], b, n*sizeof(complex));
@@ -1874,12 +1873,9 @@ void gmg_apply(int n, complex *b, complex *x)
     for(j=0; j<=gmg[0].n2; j++){
       for(i=0; i<=gmg[0].n1; i++){
 	//multiply volume on both left and right sides
-	vol = gmg[0].d1s[i]*gmg[0].d2[j]*gmg[0].d3[k];
-	gmg[0].f[0][k][j][i] *= vol;
-	vol = gmg[0].d1[i]*gmg[0].d2s[j]*gmg[0].d3[k];
-	gmg[0].f[1][k][j][i] *= vol;
-	vol = gmg[0].d1[i]*gmg[0].d2[j]*gmg[0].d3s[k];
-	gmg[0].f[2][k][j][i] *= vol;
+	gmg[0].f[0][k][j][i] *= gmg[0].d1s[i]*gmg[0].d2[j]*gmg[0].d3[k];
+	gmg[0].f[1][k][j][i] *= gmg[0].d1[i]*gmg[0].d2s[j]*gmg[0].d3[k];
+	gmg[0].f[2][k][j][i] *= gmg[0].d1[i]*gmg[0].d2[j]*gmg[0].d3s[k];
       }
     }
   }
@@ -1900,7 +1896,7 @@ void gmg_apply(int n, complex *b, complex *x)
     */
   }
   memcpy(x, &gmg[0].u[0][0][0][0], n*sizeof(complex));//copy E into x
-  compute_H_from_E(gmg, 0);//compute H and store it in gmg[0].f
+  compute_H_from_E(gmg);//compute H and store it in gmg[0].f
   memcpy(b, &gmg[0].f[0][0][0][0], n*sizeof(complex));//copy H into b
 
   grid_free(gmg, 0);
