@@ -131,11 +131,11 @@ void regrid_init(acq_t *acq, emf_t *emf)
     for(j=0; j<nypad; j++){
       for(i=0; i<nxpad; i++){
 	sig11[k][j][i] = 1./emf->rho_air;//fill in with air
-	sig11[nzpad-1-k][j][i] = sig11[nzpad-1-emf->nb][k][i];
+	sig11[nzpad-1-k][j][i] = sig11[nzpad-1-emf->nb][j][i];
 	sig22[k][j][i] = 1./emf->rho_air;//fill in with air
-	sig22[nzpad-1-k][j][i] = sig22[nzpad-1-emf->nb][k][i];
+	sig22[nzpad-1-k][j][i] = sig22[nzpad-1-emf->nb][j][i];
 	rho33[k][j][i] = emf->rho_air;//fill in with air
-	rho33[nzpad-1-k][j][i] = rho33[nzpad-1-emf->nb][k][i];
+	rho33[nzpad-1-k][j][i] = rho33[nzpad-1-emf->nb][j][i];
       }
     }
   }
