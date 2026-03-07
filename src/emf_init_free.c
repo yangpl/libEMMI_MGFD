@@ -9,8 +9,6 @@
 #include "cstd.h"
 #include "emf.h"
 
-float cmpfunc(const void *a, const void *b) { return ( *(float*)a - *(float*)b ); }
-
 void emf_init(emf_t *emf)
 {
   int ifreq, ic, istat;
@@ -22,7 +20,6 @@ void emf_init(emf_t *emf)
   emf->freqs = alloc1float(emf->nfreq);
   emf->omegas = alloc1float(emf->nfreq);
   getparfloat("freqs", emf->freqs);/* a list of frequencies separated by comma */
-  qsort(emf->freqs, emf->nfreq, sizeof(float), cmpfunc);/*sort frequencies in ascending order*/
   for(ifreq = 0; ifreq<emf->nfreq; ++ifreq) {
     emf->omegas[ifreq] = 2.*PI*emf->freqs[ifreq];
     if(emf->verb) printf("freq[%d]=%g \n", ifreq, emf->freqs[ifreq]);
@@ -141,6 +138,8 @@ void emf_init(emf_t *emf)
 
 void emf_free(emf_t *emf)
 {
+  if(emf->chsrc) free1(emf->chsrc);
+  if(emf->chrec) free1(emf->chrec);
   free1float(emf->freqs);
   free1float(emf->omegas);
   free3float(emf->rho11);
