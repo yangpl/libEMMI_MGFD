@@ -9,7 +9,7 @@
 #include "cstd.h"
 #include "emf.h"
 
-int cmpfunc(const void *a, const void *b) { return ( *(float*)a - *(float*)b ); }
+float cmpfunc(const void *a, const void *b) { return ( *(float*)a - *(float*)b ); }
 
 void emf_init(emf_t *emf)
 {
@@ -141,6 +141,8 @@ void emf_init(emf_t *emf)
 
 void emf_free(emf_t *emf)
 {
+  free1float(emf->freqs);
+  free1float(emf->omegas);
   free3float(emf->rho11);
   free3float(emf->rho22);
   free3float(emf->rho33);
