@@ -63,48 +63,15 @@ void acq_init(acq_t *acq, emf_t * emf)
   if(fabs(acq->x2max-acq->x2min-emf->dy*emf->ny)>1e-15)
     err("inconsistent input: x2max-x2min!=dy*ny");
   
-  acq->shot_idx = alloc1int(nproc);
-  nsrc = countparval("shots");
-  if(nsrc>0){
-    if( nsrc<nproc) err("nproc > number of shot indices! ");
-    getparint("shots", acq->shot_idx);/* a list of source index separated by comma */
-  }
-  if(nsrc==0){
-    for(i=0; i<nproc; i++) acq->shot_idx[i] = i+1;//index starts from 1
-  }
-
-
-  idx = acq->shot_idx[iproc];
-
-  //===========================================================================
-  //step 0. establish source-receiver connection table considering reciprocity
-  //==========================================================================
-  fp = fopen(fsrcrec,"r");
-  if(fp==NULL) err("file fsrcrec= missing!");
-  fscanf(fp, "%*[^\n]\n");//skip a line at the beginning of the file
-  i = 0;
-  while(1){
-    /* (northing,easting,depth)=(y,x,z); azimuth = heading; dip=pitch */
-    iseof=fscanf(fp,"%d %d", &isrc, &irec);
-    if(iseof==EOF)
-      break;
-    else{
-      if(emf->reciprocity){
-  	if(irec==idx) {//irec-th common receiver gather
-  	  rec_idx[i] = isrc;//the global source index associated with current receiver
-  	  i++;
-  	}
-      }else{
-  	if(isrc==idx) {//isrc-th source gather
-  	  rec_idx[i] = irec;//the global receiver index associated with current source
-  	  i++;
-  	}
-      }
-    }
-  }
-  acq->nrec = i;
-  fclose(fp);
-
+  /* acq->shot_idx = alloc1int(nproc); */
+  /* nsrc = countparval("shots"); */
+  /* if(nsrc>0){ */
+  /*   if( nsrc<nproc) err("nproc > number of shot indices! "); */
+  /*   getparint("shots", acq->shot_idx);/\* a list of source index separated by comma *\/ */
+  /* } */
+  /* if(nsrc==0){ */
+  /*   for(i=0; i<nproc; i++) acq->shot_idx[i] = i+1;//index starts from 1 */
+  /* } */
 
   /*============================================*/
   /* step 1: read all possible source locations */
@@ -149,6 +116,61 @@ void acq_init(acq_t *acq, emf_t * emf)
   if(x1max>acq->x1max) err("source location: x>x1max");
   if(x2max>acq->x2max) err("source location: y>x2max");
   if(x3max>acq->x3max) err("source location: z>x3max");
+
+  //set shot_idx, make sure nproc<=nsrc_total
+  //=========================================
+  acq->shot_idx = alloc1int(nproc);
+  int nshots = countparval("shots");
+
+  if (nshots > 0) {
+    if (nshots != nproc) err("shots length (%d) must equal nproc (%d)", nshots,
+			     nproc);
+    getparint("shots", acq->shot_idx);
+    for (i=0; i<nproc; i++) {
+      if (acq->shot_idx[i] < 1 || acq->shot_idx[i] > acq->nsrc_total)
+        err("shots[%d]=%d out of range [1,%d]", i, acq->shot_idx[i],
+	    acq->nsrc_total);
+    }
+  } else {
+    if (nproc > acq->nsrc_total)
+      err("nproc=%d > nsrc_total=%d; reduce nproc or provide shots=", nproc,
+	  acq->nsrc_total);
+    for (i=0; i<nproc; i++) acq->shot_idx[i] = i+1;
+  }
+  
+
+  idx = acq->shot_idx[iproc];
+
+  //===========================================================================
+  //step 0. establish source-receiver connection table considering reciprocity
+  //==========================================================================
+  fp = fopen(fsrcrec,"r");
+  if(fp==NULL) err("file fsrcrec= missing!");
+  fscanf(fp, "%*[^\n]\n");//skip a line at the beginning of the file
+  i = 0;
+  while(1){
+    /* (northing,easting,depth)=(y,x,z); azimuth = heading; dip=pitch */
+    iseof=fscanf(fp,"%d %d", &isrc, &irec);
+    if(iseof==EOF)
+      break;
+    else{
+      if(emf->reciprocity){
+  	if(irec==idx) {//irec-th common receiver gather
+  	  rec_idx[i] = isrc;//the global source index associated with current receiver
+  	  i++;
+  	}
+      }else{
+  	if(isrc==idx) {//isrc-th source gather
+  	  rec_idx[i] = irec;//the global receiver index associated with current source
+  	  i++;
+  	}
+      }
+    }
+  }
+  acq->nrec = i;
+  fclose(fp);
+
+
 
     
   /*==============================================*/
