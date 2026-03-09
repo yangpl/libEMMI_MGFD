@@ -1,6 +1,6 @@
 # libEMMI_MGFD GTK Launcher
 
-This is a GTK3 interface to run `libEMMI_MGFD` with an editable `run.sh`, following the same general workflow as the `SMIwiz` launcher.
+This is a GTK3 interface to run `libEMMI_MGFD` by editing `inputpar.txt` and launching the executable directly with MPI.
 
 ## Build
 
@@ -18,13 +18,23 @@ cd GUI
 
 ## What It Does
 
-- Select project directory, run directory, and `run.sh`.
-- Load and edit `run.sh` directly in the main text panel.
-- Edit common modelling and inversion parameters in a form.
-- Sync controls:
-  - `Script -> Form` parses `key=value` lines from the script into form fields.
-  - `Form -> Script` writes form values back into the script text.
-- Save `run.sh` from the GUI.
-- Run `bash run.sh` directly from the selected run directory while streaming stdout/stderr to the log panel.
+- Select project directory, run directory, and the `bin/main` executable.
+- Edit `inputpar.txt` directly in the main text panel.
+- Load and save `inputpar.txt` from the GUI.
+- Set the MPI rank count in the GUI.
+- Run the solver with:
+  ```bash
+  mpirun -n <ranks> <binary> $(cat inputpar.txt)
+  ```
+  in the selected run directory.
+- Stream stdout and stderr to the log panel.
 - Stop a running job with `SIGTERM`.
 - Run an optional plot command manually in the selected run directory.
+
+## Default Paths
+
+By default the launcher points to:
+
+- project directory: `libEMMI_MGFD`
+- run directory: `libEMMI_MGFD/run_modelling`
+- binary: `libEMMI_MGFD/bin/main`
