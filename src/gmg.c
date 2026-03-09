@@ -147,6 +147,7 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
   
   A = alloc2complex(6, 6);
   b = alloc1complex(6);
+  
   int kbeg, kend, kstep, jbeg, jend, jstep, ibeg, iend, istep;
   if(iter%2==1){
     kbeg = n3-1; kend = 0;  kstep = -1;
