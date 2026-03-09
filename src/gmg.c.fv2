@@ -1,5 +1,5 @@
 /* Solving 3D diffusive Maxwell equation using geometric multigrid method
- * It uses finite volume discretization.
+ * It uses finite volume discretization, this gmg.c.fv2 does not use invmur.
  *------------------------------------------------------------------------
  * Copyright (c) 2020-2022 Harbin Institute of Technology. All rights reserved.
  * Author: Pengliang Yang 
@@ -611,7 +611,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
       im1 = MAX(i-1, 0);
       //initialize all unknowns to 0, the residuals are then right hand sides
       for(j=1; j<n2; j++){
-	jp1 = MIN(j+1, n1);
+	jp1 = MIN(j+1, n2);
 	jm1 = MAX(j-1, 0);
 
 	Ey[k][jm1][i] = 0;

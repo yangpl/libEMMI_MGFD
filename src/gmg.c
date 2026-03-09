@@ -690,7 +690,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
       im1 = MAX(i-1, 0);
       //initialize all unknowns to 0, the residuals are then right hand sides
       for(j=1; j<n2; j++){
-	jp1 = MIN(j+1, n1);
+	jp1 = MIN(j+1, n2);
 	jm1 = MAX(j-1, 0);
 
 	Ey[k][jm1][i] = 0;
