@@ -128,7 +128,7 @@ void emf_init(emf_t *emf)
   emf->rho_water = vmin;
   if(emf->verb){
     printf("input model [rhomin, rhomax]=[%g, %g]\n", vmin, vmax);
-    printf("rho_air=%e\n", emf->rho_air);
+    printf("rho_air=%g\n", emf->rho_air);
     printf("rho_water=%g\n", emf->rho_water);
     printf("extended distance on each side: lextend=%g\n", emf->lextend);
   }
