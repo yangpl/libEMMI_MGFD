@@ -1722,12 +1722,13 @@ void gmg_init(emf_t *emf, int ifreq)
     lmax = MAX(MAX(lmax1, lmax2), lmax3);
   }
   if(verb) {
-    printf("cycleopt=%d (1=V cycle; 2=F cycle; 3=W cycle)\n", cycleopt);
-    printf("number of V/F/W cycles, ncycle=%d\n", ncycle);
-    printf("number of pre-smoothing, v1=%d\n", v1);
-    printf("number of post-smoothing, v2=%d\n", v2);
-    printf("number of grid levels, [lmax1,lmax2,lmax3]=[%d,%d,%d]\n", lmax1,lmax2,lmax3);
-    printf("isemicoarsen=%d (1=semi-coarsening, 0=full coarsening)\n", isemicoarsen);
+    printf("cycleopt=%d (1=V; 2=F; 3=W cycle)\n", cycleopt);
+    printf("ncycle=%d (number of V/F/W cycles)\n", ncycle);
+    printf("v1=%d (number of pre-smoothing)\n", v1);
+    printf("v2=%d (number of post-smoothing)\n", v2);
+    printf("[lmax1,lmax2,lmax3]=[%d,%d,%d] (number of grid levels)\n", lmax1,lmax2,lmax3);
+    printf("isemicoarsen=%d (1=semi, 0=full coarsening)\n", isemicoarsen);
+    printf("tol=%g (convergence tolerance)\n", tol);
     printf("----------------------------------------------\n");
   }  
   gmg = (gmg_t*)malloc(lmax*sizeof(gmg_t));
