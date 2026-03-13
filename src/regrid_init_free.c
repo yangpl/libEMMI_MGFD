@@ -226,6 +226,9 @@ void regrid_init(acq_t *acq, emf_t *emf)
     }
   }
   
+  free3float(sig11);
+  free3float(sig22);
+  free3float(rho33);
 }
 
 /*< free variables in emf >*/
