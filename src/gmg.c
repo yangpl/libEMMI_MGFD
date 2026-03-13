@@ -154,9 +154,9 @@ void gauss_seidel(gmg_t *gmg, int lev, int iter)
     jbeg = n2-1; jend = 0;  jstep = -1;
     ibeg = n1-1; iend = 0;  istep = -1;
   }else{
-    kbeg = 1;    kend = n3; kstep = 1;
-    jbeg = 1;    jend = n2; jstep = 1;
-    ibeg = 1;    iend = n1; istep = 1;
+    kbeg = 1;    kend = n3-1; kstep = 1;
+    jbeg = 1;    jend = n2-1; jstep = 1;
+    ibeg = 1;    iend = n1-1; istep = 1;
   }
 
   for(k=kbeg; k!=kend; k+=kstep){
@@ -381,8 +381,8 @@ void line_gauss_seidel_x(gmg_t *gmg, int lev, int iter)
     kbeg = n3-1; kend = 0;  kstep = -1;
     jbeg = n2-1; jend = 0;  jstep = -1;
   }else{
-    kbeg = 1;    kend = n3; kstep = 1;
-    jbeg = 1;    jend = n2; jstep = 1;
+    kbeg = 1;    kend = n3-1; kstep = 1;
+    jbeg = 1;    jend = n2-1; jstep = 1;
   }
 
   for(k=kbeg; k!=kend; k+=kstep){
@@ -701,8 +701,8 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
     kbeg = n3-1; kend = 0;  kstep = -1;
     ibeg = n1-1; iend = 0;  istep = -1;
   }else{
-    kbeg = 1;    kend = n3; kstep = 1;
-    ibeg = 1;    iend = n1; istep = 1;
+    kbeg = 1;    kend = n3-1; kstep = 1;
+    ibeg = 1;    iend = n1-1; istep = 1;
   }
 
   for(k=kbeg; k!=kend; k+=kstep){
@@ -1021,8 +1021,8 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
     jbeg = n2-1; jend = 0;  jstep = -1;
     ibeg = n1-1; iend = 0;  istep = -1;
   }else{
-    jbeg = 1;    jend = n2; jstep = 1;
-    ibeg = 1;    iend = n1; istep = 1;
+    jbeg = 1;    jend = n2-1; jstep = 1;
+    ibeg = 1;    iend = n1-1; istep = 1;
   }
 
   for(j=jbeg; j!=jend; j+=jstep){
