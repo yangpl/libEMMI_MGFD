@@ -1316,7 +1316,7 @@ void line_gauss_seidel_z(gmg_t *gmg, int lev, int iter)
 /*< multigrid smoothing/relaxation >*/
 void smoothing(gmg_t *gmg, int lev, int iter)
 {
-  if(isemicoarsen){
+  if(isemicoarsen && lev<lmax-1){
     //line Gauss-Seidel smoothing (LGS)=a special case of block Gauss-Seidel (BGS)
     //block Gauss-Seidel (BGS) also known as multiplicative Schwarz method
     if(gmg[lev+1].sc[0]==2) line_gauss_seidel_x(gmg, lev, iter);
