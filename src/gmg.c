@@ -1619,7 +1619,7 @@ void f_cycle(gmg_t *gmg, int lev)
   if(lev==lmax-1){//coarsest grid, direct solve or smoothing
     n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);	
     memset(&gmg[lev].u[0][0][0][0], 0, n*sizeof(complex));
-  }else{
+  }else if(gmg[lev+1].sc[0]*gmg[lev+1].sc[1]*gmg[lev+1].sc[2]>1){
     residual(gmg, lev);//residual r=f-Au at lev-th level
     if(cycleopt==2 && lev==0){//compute the norm of the residual vector at 1st iteration
       n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
@@ -1645,7 +1645,7 @@ void w_cycle(gmg_t *gmg, int lev)
   int n, i;
 
   for(i=0; i<v1; i++) smoothing(gmg, lev, i);//pre-smoothing of u based on u,f at lev-th level
-  if(lev<lmax-1){
+  if(lev<lmax-1 && gmg[lev+1].sc[0]*gmg[lev+1].sc[1]*gmg[lev+1].sc[2]>1){
     residual(gmg, lev);//residual r=f-Au at lev-th lev
     if(cycleopt==3 && lev==0){//compute the norm of the residual
       n = 3*(gmg[lev].n1+1)*(gmg[lev].n2+1)*(gmg[lev].n3+1);
@@ -1715,12 +1715,10 @@ void gmg_init(emf_t *emf, int ifreq)
   if(!getparint("v2", &v2)) v2 = 1;/* number of post-smoothing */
   if(!getpardouble("tol", &tol)) tol = 1e-6;/* stopping criteria */
   if(!getparint("isemicoarsen", &isemicoarsen)) isemicoarsen = 1;/*1=semi-coarsening; 0=no semi-coarsening */
-  if(!getparint("lmax", &lmax)) {
-    lmax1 = get_depth(emf->n1);
-    lmax2 = get_depth(emf->n2);
-    lmax3 = get_depth(emf->n3);
-    lmax = MAX(MAX(lmax1, lmax2), lmax3);
-  }
+  lmax1 = get_depth(emf->n1);
+  lmax2 = get_depth(emf->n2);
+  lmax3 = get_depth(emf->n3);
+  lmax = MAX(MAX(lmax1, lmax2), lmax3);
   if(verb) {
     printf("cycleopt=%d (1=V; 2=F; 3=W cycle)\n", cycleopt);
     printf("ncycle=%d (number of V/F/W cycles)\n", ncycle);
