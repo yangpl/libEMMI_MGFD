@@ -10,7 +10,6 @@
 #include "emf.h"
 #include "acq.h"
  
-
 int iproc, nproc, ierr;
 
 void emf_init(emf_t *emf);
@@ -29,6 +28,11 @@ int main(int argc, char **argv)
   char current_time[128];
   time_t      t;
   struct tm*  ptm;
+    
+  /* When stdout/stderr are redirected to log files, force line-buffered output so
+   * long forward/adjoint solves still emit progress messages immediately. */
+  setvbuf(stdout, NULL, _IOLBF, 0);
+  setvbuf(stderr, NULL, _IOLBF, 0);
 
   MPI_Init(&argc, &argv);
   ierr = MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
