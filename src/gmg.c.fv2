@@ -837,7 +837,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 
       //copy the solution back to Ex, Ey, Ez
       for(j=1; j<n2; j++){
-	jp1 = MIN(j+1, n3);
+	jp1 = MIN(j+1, n2);
 	jm1 = MAX(j-1, 0);
 
 	row_ind = 5*(j-1);	
