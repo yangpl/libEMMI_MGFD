@@ -737,7 +737,7 @@ void line_gauss_seidel_y(gmg_t *gmg, int lev, int iter)
 
       //initialize b and matrix A only at non-zero locations
       for(j=1; j<n2; j++){
-	jp1 = MIN(j+1, n1);
+	jp1 = MIN(j+1, n2);
 	jm1 = MAX(j-1, 0);
 
 	row_ind = 5*(j-1);
@@ -1784,7 +1784,7 @@ void grid_init(gmg_t *gmg, int lev)
   int ii, jj, kk;
   int iip1, jjp1, kkp1;
   int n1, n2, n3, repeat;
-  double val;
+  double vol, val;
 
   if(lev==0){
     gmg[lev].sc[0] = 1;//coarsening factor x
