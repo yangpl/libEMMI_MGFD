@@ -142,6 +142,18 @@ one file per shot / MPI rank. Each file contains:
 iTx iRx chrec frequency/Hz Real{E/H} Imag{E/H}
 ```
 
+When comparing this example with a 1D semi-analytical code such as `empymod`,
+make the layered-model interfaces consistent with the finite-volume grid. The
+model in `run_modelling/create_model.f90` assigns resistivity from cell-center
+depths with `dz=40 m`; therefore the intended `1500 m` interface falls at a
+cell center, and the gridded `100 ohm-m` layer effectively starts at the
+`1480 m` cell boundary. For this bundled example, use `empymod` depths
+`[0, 1000, 1480, 1600]` to match the generated `frho` model. More generally,
+choose benchmark layer depths that lie on cell boundaries, or adjust the
+analytical reference to the grid-effective interface depths. (Figure 7 of CPC 
+publication is not correct because of grid location was placed at 1500 m 
+instead of 1480 m)
+
 ## Inversion Example
 
 [`run_inversion/run.sh`](/home/pyang/Documents/libEMMI_MGFD/run_inversion/run.sh) demonstrates a multi-shot inversion:
