@@ -150,7 +150,7 @@ cell center, and the gridded `100 ohm-m` layer effectively starts at the
 `1480 m` cell boundary. For this bundled example, use `empymod` depths
 `[0, 1000, 1480, 1600]` to match the generated `frho` model. More generally,
 choose benchmark layer depths that lie on cell boundaries, or adjust the
-analytical reference to the grid-effective interface depths. (Figure 7 of CPC 
+analytical reference to the grid-effective interface depths. (Figure 6 of CPC 
 publication is not correct because of grid location was placed at 1500 m 
 instead of 1480 m)
 
