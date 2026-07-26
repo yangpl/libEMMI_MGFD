@@ -1,12 +1,11 @@
 /* Medium homogenization by volume averaging 
  * (tensor product of conservative averaging in 1D, see doc/note_averaging.pdf)
- *------------------------------------------------------------------------
- *
- * Copyright (c) 2020-2022 Harbin Institute of Technology. All rights reserved.
- * Author: Pengliang Yang 
- * Email: ypl.2100@gmail.com
+ *-----------------------------------------------------------------------------
+ * Copyright (c) 2026, Pengliang Yang, Laoshan Laboratory, China
+ * Copyright (c) 2020, Pengliang Yang, Harbin Institute of Technology, China
+ * E-mail: ypl.2100@gmail.com
  * Homepage: https://yangpl.wordpress.com
- *-----------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------*/
 #include <stdlib.h>
 
 //volumetric averaging from in[nz][ny][nx] to out[n3][n2][n1]

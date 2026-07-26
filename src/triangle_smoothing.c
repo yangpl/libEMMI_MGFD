@@ -1,9 +1,10 @@
-/*
-  Copyright (c) Pengliang Yang, 2020, Harbin Institute of Technology, China
-  Copyright (c) Pengliang Yang, 2018, University Grenoble Alpes, France
-  Homepage: https://yangpl.wordpress.com
-  E-mail: ypl.2100@gmail.com
-*/
+/* Jon Claerbout's triangle smoothing
+ *-----------------------------------------------------------------------------
+ * Copyright (c) 2026, Pengliang Yang, Laoshan Laboratory, China
+ * Copyright (c) 2020, Pengliang Yang, Harbin Institute of Technology, China
+ * E-mail: ypl.2100@gmail.com
+ * Homepage: https://yangpl.wordpress.com
+ *---------------------------------------------------------------------------*/
 #include "cstd.h"
 
 float *pp, *qq, *bb1, *bb2, *yy;

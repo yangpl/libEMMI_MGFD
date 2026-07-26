@@ -1,12 +1,11 @@
 /* regridding input parameters from uniform grid to non-uniform grid to
  * obtain effective medium by homogenization 
- *------------------------------------------------------------------------
- *
- * Copyright (c) 2020-2022 Harbin Institute of Technology. All rights reserved.
- * Author: Pengliang Yang 
- * Email: ypl.2100@gmail.com
+ *-----------------------------------------------------------------------------
+ * Copyright (c) 2026, Pengliang Yang, Laoshan Laboratory, China
+ * Copyright (c) 2020, Pengliang Yang, Harbin Institute of Technology, China
+ * E-mail: ypl.2100@gmail.com
  * Homepage: https://yangpl.wordpress.com
- *-----------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------*/
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"

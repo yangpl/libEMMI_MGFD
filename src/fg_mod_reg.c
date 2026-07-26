@@ -1,16 +1,14 @@
 /* add model regularization term for function and gradient evaluation
- *------------------------------------------------------------------------
- *
- * Copyright (c) 2021 Harbin Institute of Technology. All rights reserved.
- * Author: Pengliang Yang 
- * Email: ypl.2100@gmail.com
+ *-----------------------------------------------------------------------------
+ * Copyright (c) 2026, Pengliang Yang, Laoshan Laboratory, China
+ * Copyright (c) 2020, Pengliang Yang, Harbin Institute of Technology, China
+ * E-mail: ypl.2100@gmail.com
  * Homepage: https://yangpl.wordpress.com
- *-----------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------*/
 #include "cstd.h"
 #include "acq.h"
 #include "emf.h"
-#include "fwi.h"
- 
+#include "fwi.h" 
 
 float regularization_tikhonov(float *x, float *g, int n1, int n2, int n3, float d1, float d2, float d3);
 float regularization_tv(float *x, float *g, int n1, int n2, int n3, float d1, float d2, float d3);
