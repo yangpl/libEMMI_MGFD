@@ -205,6 +205,8 @@ float fg_fwi(float *xx, float *g)
   
   if(emf->verb) printf("------step 2: compute fcost + adjoint source---------\n");
   memset(&emf->rmse[0][0][0], 0, acq->nrec*emf->nfreq*emf->nchrec*sizeof(float));
+  memset(&emf->dres_fd[0][0][0], 0,
+	 acq->nrec*emf->nfreq*emf->nchrec*sizeof(_Complex float));
   fcost = 0.;
   for(ichrec=0; ichrec<emf->nchrec; ichrec++){
     for(ifreq=0; ifreq<emf->nfreq; ifreq++){
@@ -316,4 +318,3 @@ void Hv_fwi(float *x, float *v, float *Hv)
 {
 
 }
-

@@ -190,7 +190,12 @@ void regrid_init(acq_t *acq, emf_t *emf)
   if(emf->verb) printf("rear stretching r=%g\n", r);
   
   //---------------------------------------------
-  np1 = find_index(emf->nx + 2*emf->nb, emf->zz, acq->src_x3[0]) + 5;
+  np1 = find_index(emf->nz + 2*emf->nb + 1, emf->zz, acq->src_x3[0]) + 5;
+  if(np1 > emf->nz + 2*emf->nb)
+    err("not enough input-grid cells below source to construct the vertical grid");
+  if(np1 >= emf->n3)
+    err("n3=%d is too small: need more than %d cells for the vertical grid",
+	emf->n3, np1);
   np2 = emf->n3 - np1;
 
   for(i3=0; i3<=np1; i3++) emf->x3[i3] = emf->zz[i3];
@@ -258,5 +263,4 @@ void regrid_free(emf_t *emf)
   free3float(emf->sigma33);
   free3float(emf->invmur);
 }
-
 

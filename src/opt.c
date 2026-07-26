@@ -207,6 +207,7 @@ void line_search(int n, //dimension of x
   
   xk = alloc1float(n);  // allocate memory for store current x
   memcpy(xk, x, n*sizeof(float)); // store x at k-th iteration
+  fcost = opt->fk;
   //m3=the slope of the function of alpha along search d
   gxd = dotprod(n, g, d);//<G[f(x)]|d>
   c1_gxd = opt->c1*gxd;//c1*<G[f(x)]|d>
@@ -249,7 +250,10 @@ void line_search(int n, //dimension of x
     opt->ls_fail = 0;
     opt->fk = fcost;//fcost was not increased with this stepsize, accept it
   }else{
-    opt->ls_fail = 1; //line search fails, exit
+    opt->ls_fail = 1; //line search fails, restore the last accepted state
+    memcpy(x, xk, n*sizeof(float));
+    opt->fk = fg(x, g);
+    opt->igrad++;
   }
   
   free1float(xk);

@@ -54,6 +54,7 @@ void do_fwi(acq_t *acqui, emf_t *emf)
   /*-------------------------------------------------------------------------*/
   if(!getparint("niter", &opt->niter)) opt->niter = 30;/* maximum number of iterations */
   if(!getparint("nls", &opt->nls)) opt->nls = 5;/* maximum number of line searches */
+  if(opt->nls <= 0) err("nls must be positive");
   if(!getparfloat("tol", &opt->tol)) opt->tol = 1e-6;/* convergence tolerance */
   if(!getparint("npair", &opt->npair)) opt->npair = 5; /* l-BFGS memory length */
   if(!getparfloat("c1", &opt->c1)) opt->c1 = 1e-4; /* Nocedal value for Wolfe condition */
@@ -209,6 +210,10 @@ void do_fwi(acq_t *acqui, emf_t *emf)
 	lbfgs_save(fwi->n, opt->x, opt->g, opt->sk, opt->yk, opt);
       }
       line_search(fwi->n, opt->x, opt->g, opt->d, fg_fwi, opt);
+      if(opt->ls_fail){
+	if(opt->verb) printf("Line search failed; stopping at the last accepted model.\n");
+	break;
+      }
 
       /* not break, then line search succeeds or descent direction accepted */
       if(opt->verb) {/* print out inverted physical parameter at each iteration */
@@ -249,4 +254,3 @@ void do_fwi(acq_t *acqui, emf_t *emf)
   free(opt);
   free(fwi);
 }
-
