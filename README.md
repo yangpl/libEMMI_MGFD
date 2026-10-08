@@ -3,7 +3,7 @@
 `libEMMI_MGFD` is a 3D marine controlled-source electromagnetic (CSEM) modelling and inversion code based on a multigrid frequency-domain solver. The main executable supports:
 
 - forward modelling (`mode=0`)
-- full-waveform inversion (`mode=1`)
+- electromagnetic inversion (`mode=1`)
 - gradient evaluation (`mode=2`)
 
 The implementation is written in C and uses MPI so that different shots can be distributed across processes.
